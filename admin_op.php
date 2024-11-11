@@ -39,6 +39,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $newSchoolYear = $_POST['newSchoolYear'];
         $semester = $_POST['semester'];
 
+        // Validate the academic year format
+        if (!preg_match('/^\d{4}-\d{4}$/', $newSchoolYear)) {
+            echo "<script type='text/javascript'>
+                    alert('Invalid academic year format. Please use YYYY-YYYY.');
+                    window.location.href = 'admin.php';
+                  </script>";
+            exit();
+        }
+
         // Extract the last two digits of the ending year
         $parts = explode('-', $newSchoolYear);
         $lastTwoDigits = substr($parts[1], -2);  // Get last two digits of the end year
