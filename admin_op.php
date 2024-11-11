@@ -83,21 +83,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_acad'])) {
     }
 }
 
-
 // Add degree program
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_degree'])) {
     $degprogID = $_POST['degprogID'];
     $name = $_POST['name'];
 
-    // Check if the degree program already exists
-    if (fetchID("SELECT degprogID FROM deg_prog WHERE degprogID = ?", $degprogID, "s")) {
-        echo "<script>alert('Degree program already exists.'); window.location.href = 'admin.php';</script>";
+    // Check if either degree code or name is missing and display the specific error
+    if (empty($degprogID) && empty($name)) {
+        echo "<script>alert('Input degree program code and degree program name.'); window.location.href = 'admin.php';</script>";
+    } elseif (empty($degprogID)) {
+        echo "<script>alert('Degree program code is required.'); window.location.href = 'admin.php';</script>";
+    } elseif (empty($name)) {
+        echo "<script>alert('Degree program name is required.'); window.location.href = 'admin.php';</script>";
     } else {
-        // If it does not exist, insert it
-        if (executeSQL("INSERT INTO deg_prog (degprogID, name) VALUES (?, ?)", "ss", $degprogID, $name)) {
-            echo "<script>alert('Degree program added successfully.'); window.location.href = 'admin.php';</script>";
+        // Check if the degree program already exists
+        if (fetchID("SELECT degprogID FROM deg_prog WHERE degprogID = ?", $degprogID, "s")) {
+            echo "<script>alert('Degree program already exists.'); window.location.href = 'admin.php';</script>";
         } else {
-            echo "<script>alert('Error adding degree program.'); window.location.href = 'admin.php';</script>";
+            // If it does not exist, insert it
+            if (executeSQL("INSERT INTO deg_prog (degprogID, name) VALUES (?, ?)", "ss", $degprogID, $name)) {
+                echo "<script>alert('Degree program added successfully.'); window.location.href = 'admin.php';</script>";
+            } else {
+                echo "<script>alert('Error adding degree program.'); window.location.href = 'admin.php';</script>";
+            }
         }
     }
 }
