@@ -1,0 +1,237 @@
+@font-face {
+  font-family: "Optima Bold";
+  src: url("fonts/OPTIMA_B.woff2") format("woff2");
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Avenir";
+  src: url("fonts/avenir_roman_12.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Avenir Black";
+  src: url("fonts/avenir-black-webfont.woff2") format("woff2");
+  font-weight: black;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  src: url("fonts/Inter-Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter Bold";
+  font-style: bold;
+  font-display: swap;
+  src: url("fonts/Inter-Bold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter Black";
+  font-style: black;
+  font-display: swap;
+  src: url("fonts/Inter-Black.woff2") format("woff2");
+}
+
+body {
+  background-image: url("images/background.png");
+  background-repeat: no-repeat;
+  background-position: center bottom;
+  /* background-size: 100% auto; */
+  font-family: "Inter", Arial, sans-serif !important;
+  background-color: #f5f6fa;
+}
+
+.admin_header, .indicator, .select {
+  font-family: "Inter Bold", Arial Bold, sans-serif !important;
+}
+
+.admin_header {
+  background-color: white;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  color: #8e1537 !important;
+  text-transform: uppercase;
+}
+
+.indicator {
+  font-weight: bold;
+}
+
+section a, section i {
+  text-transform: uppercase;
+  font-weight: normal;
+  color: #8e1537 !important;
+  word-spacing: 10px;
+}
+
+.maroon {
+  background-color: #8e1537 !important;
+}
+
+.green {
+  background-color: #005740 !important;
+}
+
+hr {
+  border-color: #8e1537;
+  border-width: 2px;
+}
+
+label {
+  color: #005740;
+  text-transform: uppercase;
+  font-size: 15px;
+}
+
+select, option {
+  font-family: "Inter", Arial, sans-serif !important;
+  font-size: 14px;
+  color: #333333;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+select {
+  border: none;
+  min-height: 100%;
+  padding: 5px;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+select:focus {
+  outline: none;
+}
+
+option:hover {
+  background-color: #8e1537;
+}
+
+@media (max-width: 768px) {
+  label {
+    font-size: 12px;
+  }
+  select, option {
+    font-size: 12px;
+  }
+  select {
+    width: 100%;
+  }
+}
+
+.chart-card {
+  background: white;
+  border-radius: 10px;
+  font-family: "Inter", Arial, sans-serif !important;
+  text-align: center;
+}
+
+h1 {
+  font-family: "Inter Black", Arial, sans-serif;
+  font-size: 20px;
+}
+
+h2 {
+  font-size: 16px;
+}
+
+.card-header {
+  font-family: "Inter Black", Arial, sans-serif;
+  font-size: 16px;
+  text-transform: capitalize;
+  font-weight: bold;
+}
+
+.card {
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+  outline-color: #8e1537;
+  border-color: #8e1537;
+}
+
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #8e1537;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 200px;
+}
+
+.sidenav a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  color: white;
+  display: block;
+  transition: 0.3s;
+  font-family: "Avenir";
+  font-size: 30px;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+@media screen and (max-height: 450px) {
+  .sidenav {
+    padding-top: 15px;
+  }
+  .sidenav a {
+    font-size: 18px;
+  }
+  .sidenav {
+    width: 100%;
+  }
+}
+
+.zoomed {
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 60% !important;
+  height: 70%;
+  overflow: hidden;
+}
+
+#overlay {
+  display: none;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 2;
+}
+
+.chart-card:hover {
+  cursor: pointer;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.3);
+}
