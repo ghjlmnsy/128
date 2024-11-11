@@ -88,12 +88,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_acad'])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_degree'])) {
     $degprogID = $_POST['degprogID'];
     $name = $_POST['name'];
-    if (executeSQL("INSERT INTO deg_prog (degprogID, name) VALUES (?, ?)", "ss", $degprogID, $name)) {
-        echo "<script>alert('Added successfully.'); window.location.href = 'admin.php';</script>";
+
+    // Check if the degree program already exists
+    if (fetchID("SELECT degprogID FROM deg_prog WHERE degprogID = ?", $degprogID, "s")) {
+        echo "<script>alert('Degree program already exists.'); window.location.href = 'admin.php';</script>";
     } else {
-        echo "<script>alert('Error adding degree program.'); window.location.href = 'admin.php';</script>";
+        // If it does not exist, insert it
+        if (executeSQL("INSERT INTO deg_prog (degprogID, name) VALUES (?, ?)", "ss", $degprogID, $name)) {
+            echo "<script>alert('Degree program added successfully.'); window.location.href = 'admin.php';</script>";
+        } else {
+            echo "<script>alert('Error adding degree program.'); window.location.href = 'admin.php';</script>";
+        }
     }
 }
+
 
 // Delete degree program function
 if (isset($_POST['delete_degree']) && isset($_POST['existingSY'])) {
