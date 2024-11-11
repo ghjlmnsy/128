@@ -17,41 +17,20 @@ function redirectToStudentsPage() {
     exit();
 }
 
-function fetchID($sql, $param, $type)
-{
+function fetchTimeID($schoolYear, $semester) {
     global $conn;
+    $sql = "SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?";
     $stmt = $conn->prepare($sql);
     if ($stmt) {
-        $stmt->bind_param($type, $param);
+        $stmt->bind_param("ss", $schoolYear, $semester);
         $stmt->execute();
-        $stmt->bind_result($id);
+        $stmt->bind_result($timeID);
         if ($stmt->fetch()) {
-            $stmt->close();
-            return $id;
+            return $timeID;
         }
         $stmt->close();
     }
     return null;
-}
-
-function executeSQL($sql, $types, ...$params)
-{
-    global $conn;
-    $stmt = $conn->prepare($sql);
-    if ($stmt) {
-        $stmt->bind_param($types, ...$params);
-        if ($stmt->execute()) {
-            $stmt->close();
-            return true;
-        } else {
-            echo "<script type='text/javascript'>
-                    alert('Error: " . $stmt->error . "');
-                    window.location.href = 'admin.php';
-                  </script>";
-        }
-        $stmt->close();
-    }
-    return false;
 }
 
 // Add academic year and semester function
@@ -60,15 +39,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $newSchoolYear = $_POST['newSchoolYear'];
         $semester = $_POST['semester'];
 
-        // Validate the academic year format
-        if (!preg_match('/^\d{4}-\d{4}$/', $newSchoolYear)) {
-            echo "<script type='text/javascript'>
-                    alert('Invalid academic year format. Please use YYYY-YYYY.');
-                    window.location.href = 'admin.php';
-                  </script>";
-            exit();
-        }
-
         // Extract the last two digits of the ending year
         $parts = explode('-', $newSchoolYear);
         $lastTwoDigits = substr($parts[1], -2);  // Get last two digits of the end year
@@ -76,7 +46,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // Check if the timeID already exists to avoid duplicates
         $checkSql = "SELECT * FROM time_period WHERE timeID = ?";
-        if (fetchID($checkSql, $timeID, "s")) {
+        $checkStmt = $conn->prepare($checkSql);
+        $checkStmt->bind_param("s", $timeID);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        if ($checkResult->num_rows > 0) {
             echo "<script type='text/javascript'>
                     alert('Academic year and semester combination already exists.');
                     window.location.href = 'admin.php';
@@ -84,13 +58,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         } else {
             // Insert new academic year, semester, and generated timeID
             $sql = "INSERT INTO time_period (timeID, SchoolYear, semester) VALUES (?, ?, ?)";
-            if (executeSQL($sql, "ssi", $timeID, $newSchoolYear, $semester)) {
-                echo "<script type='text/javascript'>
-                        alert('Added successfully.');
-                        window.location.href = 'admin.php';
-                      </script>";
+            $stmt = $conn->prepare($sql);
+            if ($stmt) {
+                $stmt->bind_param("ssi", $timeID, $newSchoolYear, $semester);
+                if ($stmt->execute()) {
+                    echo "<script type='text/javascript'>
+                            alert('Added successfully.');
+                            window.location.href = 'admin.php';
+                          </script>";
+                } else {
+                    echo "<script type='text/javascript'>
+                            alert('Error adding: " . $stmt->error . "');
+                            window.location.href = 'admin.php';
+                        </script>";
+                }
+                $stmt->close();
+                             
             }
         }
+        $checkStmt->close();
     }
 }
 
@@ -104,13 +90,32 @@ if (isset($_POST['delete_acad'])) {
 
     // Prepare the SQL statement for deletion
     $sql = "DELETE FROM time_period WHERE SchoolYear = ? AND semester = ?";
-    if (executeSQL($sql, "si", $schoolYear, $semester)) {
+    $stmt = $conn->prepare($sql);
+    
+    if ($stmt === false) {
+        echo "<script>alert('Error preparing statement: " . $conn->error . "');</script>";
+        exit;
+    }    
+    
+    // Bind parameters to the prepared statement
+    $stmt->bind_param("si", $schoolYear, $semester);
+
+    // Execute the deletion query
+    if ($stmt->execute()) {
         echo "<script type='text/javascript'>
                 alert('Deleted successfully.');
                 window.location.href = 'admin.php';
               </script>";
+    } else {
+        echo "<script type='text/javascript'>
+                    alert('Error deleting: " . $stmt->error . "');
+                    window.location.href = 'admin.php';
+                </script>";
     }
+    // Close the statement
+    $stmt->close();
 }
+
 
 // Add degree program function
 if (isset($_POST['add_degree'])) {
@@ -118,35 +123,55 @@ if (isset($_POST['add_degree'])) {
     $name = $_POST['name'];
 
     $sql = "INSERT INTO deg_prog (degprogID, name) VALUES (?, ?)";
-    if (executeSQL($sql, "ss", $degprogID, $name)) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ss", $degprogID, $name);
+
+    if ($stmt->execute()) {
         echo "<script type='text/javascript'>
                 alert('Added successfully.');
                 window.location.href = 'admin.php';
               </script>";
+    } else {
+        echo "<script type='text/javascript'>
+                    alert('Error adding: " . $stmt->error . "');
+                    window.location.href = 'admin.php';
+            </script>";
     }
+    $stmt->close();
 }
 
 // Delete degree program function
 if (isset($_POST['delete_degree']) && isset($_POST['existingSY'])) {
+    // Sanitize the input to prevent SQL Injection
     $degprogID = $conn->real_escape_string($_POST['existingSY']);
-
-    $deleteSql = "DELETE FROM deg_prog WHERE degprogID = ?";
-    if (executeSQL($deleteSql, "s", $degprogID)) {
+    
+    // SQL to delete a degree program
+    $deleteSql = "DELETE FROM deg_prog WHERE degprogID = '$degprogID'";
+    
+    if ($conn->query($deleteSql) === TRUE) {
         echo "<script type='text/javascript'>
                 alert('Deleted successfully.');
                 window.location.href = 'admin.php';
               </script>";
+    } else {
+        echo "<script type='text/javascript'>
+            alert('Error deleting: " . $conn->error . "');
+            window.location.href = 'admin.php';
+        </script>";
     }
 }
 
 // Add achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_achievement') {
-    $awardType = trim($_POST['awardType'] ?? '');
-    $degprogID = trim($_POST['degprogID'] ?? '');
-    $count = trim($_POST['count'] ?? '');
+    // Retrieve form data and trim whitespace
+    $awardType = isset($_POST['awardType']) ? trim($_POST['awardType']) : '';
+    $degprogID = isset($_POST['degprogID']) ? trim($_POST['degprogID']) : '';
+    $count = isset($_POST['count']) ? trim($_POST['count']) : '';
 
+    // Use PHP explode function to separate yearLevel, degprogID, SchoolYear, semester
     list($yearLevel, $degprogID, $SchoolYear, $semester) = array_map('trim', explode(' ', $degprogID));
 
+    // Ensure required fields are not empty
     if (empty($awardType) || empty($degprogID) || empty($yearLevel) || empty($SchoolYear) || empty($semester) || empty($count)) {
         echo "<script type='text/javascript'>
                 alert('All fields are required.');
@@ -155,40 +180,114 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         return;
     }
 
-    $awardtypeID = fetchID("SELECT awardtypeID FROM award_type WHERE awardType = ?", $awardType, "s");
-    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", $SchoolYear, $semester, "ss");
-    $degID = fetchID("SELECT degID FROM college_degree WHERE yearLevel = ? AND degprogID = ? AND timeID = ?", $yearLevel, $degprogID, $timeID, "iss");
-
-    if ($awardtypeID && $timeID && $degID) {
-        $sql = "INSERT INTO student_awards (awardtypeID, degID, count) VALUES (?, ?, ?)";
-        if (executeSQL($sql, "ssi", $awardtypeID, $degID, $count)) {
-            echo "<script type='text/javascript'>
-                    alert('Added successfully.');
-                    window.location.href = 'admin.php';
-                  </script>";
-        }
+    // Step 1: Fetch awardtypeID based on award type
+    $stmt = $conn->prepare("SELECT awardtypeID FROM award_type WHERE awardType = ?");
+    $stmt->bind_param("s", $awardType);
+    $stmt->execute();
+    $stmt->bind_result($awardtypeID);
+    if ($stmt->fetch()) {
+        // Success: fetched awardtypeID
+    } else {
+        echo "No valid awardtypeID found for the given award type: $awardType.";
+        $stmt->close();
+        $conn->close();
+        return;
     }
+    $stmt->close();
+
+    // Step 2: Select timeID column in time_period table that matches the given SchoolYear and semester
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+    $stmt->bind_param("ss", $SchoolYear, $semester);
+    $stmt->execute();
+    $stmt->bind_result($timeID);
+    if ($stmt->fetch()) {
+        // Success: fetched timeID
+    } else {
+        echo "No valid timeID found for the given SchoolYear: $SchoolYear and semester: $semester.";
+        $stmt->close();
+        $conn->close();
+        return;
+    }
+    $stmt->close();
+
+    // Step 3: Select degID column in college_degree table that matches the given yearLevel, degprogID, timeID
+    $stmt = $conn->prepare("SELECT degID FROM college_degree WHERE yearLevel = ? AND degprogID = ? AND timeID = ?");
+    $stmt->bind_param("iss", $yearLevel, $degprogID, $timeID);
+    $stmt->execute();
+    $stmt->bind_result($degID);
+    if ($stmt->fetch()) {
+        // Success: fetched degID
+    } else {
+        echo "No valid degID found for the given yearLevel: $yearLevel, degprogID: $degprogID, and timeID: $timeID.";
+        $stmt->close();
+        $conn->close();
+        return;
+    }
+    $stmt->close();
+
+    // Step 4: Insert the new achievement information into the student_awards table
+    $stmt = $conn->prepare("INSERT INTO student_awards (awardtypeID, degID, count) VALUES (?, ?, ?)");
+    $stmt->bind_param("ssi", $awardtypeID, $degID, $count);
+    if ($stmt->execute()) {
+        echo "<script type='text/javascript'>
+                alert('Added successfully.');
+                window.location.href = 'admin.php';
+              </script>";
+    } else {
+        echo "<script type='text/javascript'>
+                    alert('Error adding: " . $stmt->error . "');
+                    window.location.href = 'admin.php';
+                </script>";
+    }
+    $stmt->close();
 }
 
 // Delete achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_achievement') {
     $achievement = $_POST['existingAchievements'];
 
+    // Step 1: Use PHP explode function to separate awardType, yearLevel, degprogID, SchoolYear, semester
     list($awardType, $yearLevel, $degprogID, $SchoolYear, $semester) = array_map('trim', explode(',', $achievement));
 
-    $awardtypeID = fetchID("SELECT awardtypeID FROM award_type WHERE awardType = ?", $awardType, "s");
-    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", $SchoolYear, $semester, "ss");
-    $degID = fetchID("SELECT degID FROM college_degree WHERE yearLevel = ? AND degprogID = ? AND timeID = ?", $yearLevel, $degprogID, $timeID, "sss");
+    // Step 2: Select awardtypeID column in award_type table that matches the given awardType
+    $stmt = $conn->prepare("SELECT awardtypeID FROM award_type WHERE awardType = ?");
+    $stmt->bind_param("s", $awardType);
+    $stmt->execute();
+    $stmt->bind_result($awardtypeID);
+    $stmt->fetch();
+    $stmt->close();
 
-    if ($awardtypeID && $timeID && $degID) {
-        $sql = "DELETE FROM student_awards WHERE awardtypeID = ? AND degID = ?";
-        if (executeSQL($sql, "ii", $awardtypeID, $degID)) {
-            echo "<script type='text/javascript'>
-                    alert('Deleted successfully.');
+    // Step 3: Select timeID column in time_period table that matches the given SchoolYear and semester
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+    $stmt->bind_param("ss", $SchoolYear, $semester);
+    $stmt->execute();
+    $stmt->bind_result($timeID);
+    $stmt->fetch();
+    $stmt->close();
+
+    // Step 4: Select degID column in college_degree table that matches the given yearLevel, degprogID, timeID
+    $stmt = $conn->prepare("SELECT degID FROM college_degree WHERE yearLevel = ? AND degprogID = ? AND timeID = ?");
+    $stmt->bind_param("sss", $yearLevel, $degprogID, $timeID);
+    $stmt->execute();
+    $stmt->bind_result($degID);
+    $stmt->fetch();
+    $stmt->close();
+
+    // Step 5: Delete row in student_awards table that matches the awardtypeID, degID
+    $stmt = $conn->prepare("DELETE FROM student_awards WHERE awardtypeID = ? AND degID = ?");
+    $stmt->bind_param("ii", $awardtypeID, $degID);
+    if ($stmt->execute()) {
+        echo "<script type='text/javascript'>
+                alert('Deleted successfully.');
+                window.location.href = 'admin.php';
+              </script>";
+    } else {
+        echo "<script type='text/javascript'>
+                    alert('Error deleting: " . $stmt->error . "');
                     window.location.href = 'admin.php';
-                  </script>";
-        }
+                </script>";
     }
+    $stmt->close();
 }
 
 // Add degree program information function
@@ -199,27 +298,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $semester = $_POST['semester'];
     $count = $_POST['count'];
 
-    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", $SchoolYear, $semester, "ss");
+    // Step 1: Select timeID column in time_period table that matches the given SchoolYear and semester
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+    $stmt->bind_param("ss", $SchoolYear, $semester);
+    $stmt->execute();
+    $stmt->bind_result($timeID);
+    $stmt->fetch();
+    $stmt->close();
+
+    // Step 2: Create degID by concatenating yearLevel, degprogID, and timeID
     $degID = $yearLevel . $degprogID . $timeID;
 
-    if ($timeID) {
-        $sql = "INSERT INTO college_degree (degID, yearLevel, degprogID, timeID, count) VALUES (?, ?, ?, ?, ?)";
-        if (executeSQL($sql, "sssss", $degID, $yearLevel, $degprogID, $timeID, $count)) {
-            echo "<script type='text/javascript'>
-                    alert('Added successfully.');
-                    window.location.href = 'admin.php';
-                  </script>";
-        }
+    // Step 3: Insert the new degree information into the college_degree table
+    $stmt = $conn->prepare("INSERT INTO college_degree (degID, yearLevel, degprogID, timeID, count) VALUES (?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssss", $degID, $yearLevel, $degprogID, $timeID, $count);
+    if ($stmt->execute()) {
+        echo "<script type='text/javascript'>
+                alert('Added successfully.');
+                window.location.href = 'admin.php';
+              </script>";
+    } else {
+        echo "<script type='text/javascript'>
+                alert('Error adding: " . $stmt->error . "');
+                window.location.href = 'admin.php';
+            </script>";
     }
+    $stmt->close();
 }
 
 // Add event function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_event') {
-    $eventName = trim($_POST['eventName'] ?? '');
-    $schoolYear = trim($_POST['SchoolYear'] ?? '');
-    $semester = trim($_POST['semester'] ?? '');
-    $count = trim($_POST['count'] ?? '');
+    $eventName = isset($_POST['eventName']) ? trim($_POST['eventName']) : '';
+    $schoolYear = isset($_POST['SchoolYear']) ? trim($_POST['SchoolYear']) : '';
+    $semester = isset($_POST['semester']) ? trim($_POST['semester']) : '';
+    $count = isset($_POST['count']) ? trim($_POST['count']) : '';
 
+    // Ensure required fields are not empty
     if (empty($eventName) || empty($schoolYear) || empty($semester) || empty($count)) {
         echo "<script type='text/javascript'>
                 alert('All fields are required.');
@@ -228,29 +342,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         return;
     }
 
-    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", $schoolYear, $semester, "ss");
+    // Find the corresponding timeID for the selected SchoolYear and Semester
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+    $stmt->bind_param("ss", $schoolYear, $semester);
+    $stmt->execute();
+    $stmt->bind_result($timeID);
+    $stmt->fetch();
+    $stmt->close();
 
     if ($timeID) {
-        $sql = "INSERT INTO event (eventName, timeID, count) VALUES (?, ?, ?)";
-        if (executeSQL($sql, "ssi", $eventName, $timeID, $count)) {
+        // Insert the new event into the event table
+        $stmt = $conn->prepare("INSERT INTO event (eventName, timeID, count) VALUES (?, ?, ?)");
+        $stmt->bind_param("ssi", $eventName, $timeID, $count);
+        if ($stmt->execute()) {
             echo "<script type='text/javascript'>
                     alert('Added successfully.');
                     window.location.href = 'admin.php';
                   </script>";
+        } else {
+            echo "<script type='text/javascript'>
+                    alert('Error adding event: " . $stmt->error . "');
+                    window.location.href = 'admin.php';
+                </script>";
         }
+        $stmt->close();
     }
 }
 
 // Delete event function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_event') {
+    // Retrieve the selected event name
     $eventName = $_POST['existingEvents'];
 
-    $sql = "DELETE FROM event WHERE eventName = ?";
-    if (executeSQL($sql, "s", $eventName)) {
-        echo "<script type='text/javascript'>
-                alert('Deleted successfully.');
-                window.location.href = 'admin.php';
-              </script>";
+    // Prepare and execute the SQL statement to delete the event
+    $stmt = $conn->prepare("DELETE FROM event WHERE eventName = ?");
+    if ($stmt) {
+        $stmt->bind_param("s", $eventName);
+        $stmt->execute();
+        
+        if ($stmt->affected_rows > 0) {
+            echo "<script type='text/javascript'>
+                    alert('Deleted successfully.');
+                    window.location.href = 'admin.php';
+                  </script>";
+        } else {
+            echo "<script type='text/javascript'>
+            alert('No event found with the name '$eventName'.');
+            window.location.href = 'admin.php';
+          </script>";
+        }
+        $stmt->close();
+    } else {
+        echo "<script>alert('Error preparing statement: " . $conn->error . "');</script>";
     }
 }
 
@@ -261,15 +404,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $semester = $_POST['semester'];
     $count = $_POST['count'];
 
-    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", $schoolYear, $semester, "ss");
+    // Find the corresponding timeID for the selected SchoolYear and Semester
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+    if ($stmt) {
+        $stmt->bind_param("ss", $schoolYear, $semester);
+        $stmt->execute();
+        $stmt->bind_result($timeID);
+        $stmt->fetch();
+        $stmt->close();
+    }
 
     if ($timeID) {
-        $sql = "INSERT INTO publication (title, timeID, count) VALUES (?, ?, ?)";
-        if (executeSQL($sql, "ssi", $title, $timeID, $count)) {
-            echo "<script type='text/javascript'>
-                    alert('Added successfully.');
-                    window.location.href = 'admin.php';
-                  </script>";
+        // Insert the new publication into the publication table
+        $stmt = $conn->prepare("INSERT INTO publication (title, timeID, count) VALUES (?, ?, ?)");
+        if ($stmt) {
+            $stmt->bind_param("ssi", $title, $timeID, $count);
+            if ($stmt->execute()) {
+                echo "<script type='text/javascript'>
+                        alert('Added successfully.');
+                        window.location.href = 'admin.php';
+                      </script>";
+            } else {
+                echo "<script type='text/javascript'>
+                        alert('Error adding: " . $stmt->error . "');
+                        window.location.href = 'admin.php';
+                    </script>";
+            }
+            $stmt->close();
         }
     }
 }
@@ -278,27 +439,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_publication') {
     $title = $_POST['existingPub'];
 
+
+    // Ensure $title is not an array
     if (is_array($title)) {
-        $title = $title[0];
+        $title = $title[0]; // If it's an array, get the first element
     }
 
-    $sql = "DELETE FROM publication WHERE title = ?";
-    if (executeSQL($sql, "s", $title)) {
-        echo "<script type='text/javascript'>
-                alert('Deleted successfully.');
-                window.location.href = 'admin.php';
-              </script>";
+    // Prepare and execute the SQL statement to delete the publication
+    $stmt = $conn->prepare("DELETE FROM publication WHERE title = ?");
+    if ($stmt) {
+        $stmt->bind_param("s", $title);
+        $stmt->execute();
+        
+        // Debug: Check if the statement executed
+        if ($stmt->error) {
+            echo "<script>alert('Error executing statement: " . $stmt->error . "');</script>";
+        }
+
+        if ($stmt->affected_rows > 0) {
+            echo "<script type='text/javascript'>
+                    alert('Deleted successfully.');
+                    window.location.href = 'admin.php';
+                </script>";
+        } else {
+            echo "<script type='text/javascript'>
+                    alert('No publication found with the title '" . htmlspecialchars($title) . "'.');
+                    window.location.href = 'admin.php';
+                </script>";
+        }
+        $stmt->close();
+    } else {
+        echo "<script>
+                alert('Error preparing statement: " . $conn->error . "');
+                window.location.href = 'admin.php'; 
+            </script>";
     }
 }
 
 // Add faculty information function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_faculty_info') {
+
+    // Retrieve form data
     $rankTitle = $_POST['rankTitle'] ?? '';
     $educAttainmentDesc = $_POST['educAttainmentDesc'] ?? '';
     $SchoolYear = $_POST['SchoolYear'] ?? '';
     $semester = $_POST['semester'] ?? '';
     $count = $_POST['count'] ?? 0;
 
+    // Ensure required fields are not empty
     if (empty($rankTitle) || empty($educAttainmentDesc) || empty($SchoolYear) || empty($semester) || empty($count)) {
         echo "<script>
                 alert('All fields are required');
@@ -307,40 +495,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         return;
     }
 
-    $rankID = fetchID("SELECT rankID FROM rank_title WHERE title = ?", $rankTitle, "s");
-    $educAttainmentID = fetchID("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?", $educAttainmentDesc, "s");
-    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", $SchoolYear, $semester, "ss");
-
-    if ($rankID && $educAttainmentID && $timeID) {
-        $sql = "INSERT INTO faculty (rankID, educAttainmentID, timeID, count) VALUES (?, ?, ?, ?)";
-        if (executeSQL($sql, "sssi", $rankID, $educAttainmentID, $timeID, $count)) {
-            echo "<script type='text/javascript'>
-                    alert('Added successfully.');
-                    window.location.href = 'admin.php';
-                  </script>";
-        }
+    // Step 1: Fetch rankID based on rank title
+    $stmt = $conn->prepare("SELECT rankID FROM rank_title WHERE title = ?");
+    $stmt->bind_param("s", $rankTitle);
+    $stmt->execute();
+    $stmt->bind_result($rankID);
+    if (!$stmt->fetch()) {
+        $stmt->close();
+        $conn->close();
+        return;
     }
+    $stmt->close();
+
+    // Step 2: Fetch educAttainmentID based on educational attainment description
+    $stmt = $conn->prepare("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?");
+    $stmt->bind_param("s", $educAttainmentDesc);
+    $stmt->execute();
+    $stmt->bind_result($educAttainmentID);
+    if (!$stmt->fetch()) {
+        $stmt->close();
+        $conn->close();
+        return;
+    }
+    $stmt->close();
+
+    // Step 3: Select timeID column in time_period table that matches the given SchoolYear and semester
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+    $stmt->bind_param("ss", $SchoolYear, $semester);
+    $stmt->execute();
+    $stmt->bind_result($timeID);
+    if (!$stmt->fetch()) {
+        $stmt->close();
+        $conn->close();
+        return;
+    }
+    $stmt->close();
+
+    // Step 4: Insert the new faculty information into the faculty table
+    $stmt = $conn->prepare("INSERT INTO faculty (rankID, educAttainmentID, timeID, count) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("sssi", $rankID, $educAttainmentID, $timeID, $count);
+    if ($stmt->execute()) {
+        echo "<script type='text/javascript'>
+                alert('Added successfully.');
+                window.location.href = 'admin.php';
+              </script>";
+    } else {
+        $error_message = "Error adding publication: " . $stmt->error;
+        echo "<script type='text/javascript'>
+                alert('Error adding: " . $stmt->error . "');
+                window.location.href = 'admin.php';
+            </script>";
+    }
+    $stmt->close();
 }
 
 // Delete faculty information function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_faculty_info') {
     $facultyInfo = $_POST['existingfacultyInfo'];
 
+    // Step 1: Use PHP explode function to separate title, attainment, SchoolYear, semester
     list($title, $attainment, $SchoolYear, $semester) = array_map('trim', explode(',', $facultyInfo));
 
-    $rankID = fetchID("SELECT rankID FROM rank_title WHERE title = ?", $title, "s");
-    $educAttainmentID = fetchID("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?", $attainment, "s");
-    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", $SchoolYear, $semester, "ss");
-
-    if ($rankID && $educAttainmentID && $timeID) {
-        $sql = "DELETE FROM faculty WHERE rankID = ? AND educAttainmentID = ? AND timeID = ?";
-        if (executeSQL($sql, "sss", $rankID, $educAttainmentID, $timeID)) {
-            echo "<script type='text/javascript'>
-                    alert('Deleted successfully.');
-                    window.location.href = 'admin.php';
-                  </script>";
-        }
+    // Step 2: Select rankID column in rank_title table that matches the given title
+    $stmt = $conn->prepare("SELECT rankID FROM rank_title WHERE title = ?");
+    $stmt->bind_param("s", $title);
+    $stmt->execute();
+    $stmt->bind_result($rankID);
+    if (!$stmt->fetch()) {
+        echo "No valid rankID found for the given title: $title.";
+        $stmt->close();
+        $conn->close();
+        return;
     }
+    $stmt->close();
+
+    // Step 3: Select educAttainmentID column in educ_attainment table that matches the given attainment
+    $stmt = $conn->prepare("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?");
+    $stmt->bind_param("s", $attainment);
+    $stmt->execute();
+    $stmt->bind_result($educAttainmentID);
+    if (!$stmt->fetch()) {
+        echo "No valid educAttainmentID found for the given attainment: $attainment.";
+        $stmt->close();
+        $conn->close();
+        return;
+    }
+    $stmt->close();
+
+    // Step 4: Select timeID column in time_period table that matches the given SchoolYear and semester
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+    $stmt->bind_param("ss", $SchoolYear, $semester);
+    $stmt->execute();
+    $stmt->bind_result($timeID);
+    if (!$stmt->fetch()) {
+        echo "No valid timeID found for the given SchoolYear: $SchoolYear and semester: $semester.";
+        $stmt->close();
+        $conn->close();
+        return;
+    }
+    $stmt->close();
+
+    // Step 5: Delete row in faculty table that matches the rankID, educAttainmentID, and timeID
+    $stmt = $conn->prepare("DELETE FROM faculty WHERE rankID = ? AND educAttainmentID = ? AND timeID = ?");
+    $stmt->bind_param("sss", $rankID, $educAttainmentID, $timeID);
+    if ($stmt->execute()) {
+        echo "<script type='text/javascript'>
+                alert('Deleted successfully.');
+                window.location.href = 'admin.php';
+              </script>";
+    } else {
+        echo "<script type='text/javascript'>
+                alert('Error deleting: " . $stmt->error . "');
+                window.location.href = 'admin.php';
+            </script>";
+    }
+    $stmt->close();
 }
 
 $conn->close();
