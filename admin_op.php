@@ -31,13 +31,13 @@ function redirectToStudentsPage() {
 }
 
 // Helper function to fetch a single column value from the database
-function fetchID($sql, $param, $type) {
+function fetchID($sql, $params, $type) {
     global $conn;
     $stmt = $conn->prepare($sql);
     if ($stmt === false) {
         return null;
     }
-    $stmt->bind_param($type, $param);
+    $stmt->bind_param($type, ...$params); // Unpacking the array
     $stmt->execute();
     $stmt->bind_result($id);
     $stmt->fetch();
@@ -319,10 +319,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Add publication function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_publication') {
+    // Retrieve form data
     $title = $_POST['title'];
     $schoolYear = $_POST['SchoolYear'];
     $semester = $_POST['semester'];
     $count = $_POST['count'];
+
+    // Check if any of the required fields are empty
+    if (empty($title) || empty($schoolYear) || empty($semester) || empty($count)) {
+        echo "<script type='text/javascript'>
+                alert('All fields are required.');
+                window.location.href = 'admin.php';
+              </script>";
+        exit; // Stop further script execution
+    }
 
     // Find the corresponding timeID for the selected SchoolYear and Semester
     $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
@@ -334,6 +344,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $stmt->close();
     }
 
+    // Check if a valid timeID was found
     if ($timeID) {
         // Insert the new publication into the publication table
         $stmt = $conn->prepare("INSERT INTO publication (title, timeID, count) VALUES (?, ?, ?)");
@@ -352,6 +363,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             }
             $stmt->close();
         }
+    } else {
+        echo "<script type='text/javascript'>
+                alert('Invalid School Year or Semester selected.');
+                window.location.href = 'admin.php';
+              </script>";
     }
 }
 
