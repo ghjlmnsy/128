@@ -25,6 +25,11 @@ function executeSQL($sql, $types, ...$params) {
     return $result;
 }
 
+function redirectToStudentsPage() {
+    header("Location: students.php");
+    exit();
+}
+
 // Helper function to fetch a single column value from the database
 function fetchID($sql, $param, $type) {
     global $conn;
@@ -38,11 +43,6 @@ function fetchID($sql, $param, $type) {
     $stmt->fetch();
     $stmt->close();
     return $id;
-}
-
-function redirectToStudentsPage() {
-    header("Location: students.php");
-    exit();
 }
 
 // Fetch timeID
