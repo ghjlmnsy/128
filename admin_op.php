@@ -90,7 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_degree'])) {
 
     // Check if either degree code or name is missing and display the specific error
     if (empty($degprogID) && empty($name)) {
-        echo "<script>alert('Input degree program code and degree program name.'); window.location.href = 'admin.php';</script>";
+        echo "<script>alert('All fields are required.'); window.location.href = 'admin.php';</script>";
     } elseif (empty($degprogID)) {
         echo "<script>alert('Degree program code is required.'); window.location.href = 'admin.php';</script>";
     } elseif (empty($name)) {
@@ -110,7 +110,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_degree'])) {
     }
 }
 
-
 // Delete degree program function
 if (isset($_POST['delete_degree']) && isset($_POST['existingSY'])) {
     $degprogID = $conn->real_escape_string($_POST['existingSY']);
@@ -123,7 +122,6 @@ if (isset($_POST['delete_degree']) && isset($_POST['existingSY'])) {
               </script>";
     }
 }
-
 
 // Add achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_achievement') {

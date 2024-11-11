@@ -123,7 +123,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="count">Population:</label>
-                                <input type="text" class="form-control" id="count" name="count" placeholder="Enter population number">
+                                <input type="number" class="form-control" id="count" name="count" placeholder="Enter population number">
                             </div>
                             <button type="submit" class="btn btn-primary green border-0" name="action" value="add_achievement">Add</button>
                             <br /><br />
@@ -188,7 +188,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="count">Population:</label>
-                                <input type="text" class="form-control" id="count" name="count" placeholder="Enter population number">
+                                <input type="number" class="form-control" id="count" name="count" placeholder="Enter population number">
                             </div>
                             <button type="submit" class="btn btn-primary green border-0" name="action" value="add_deginfo">Add</button>
                         </form>
