@@ -37,13 +37,21 @@ function fetchID($sql, $params, $type) {
     if ($stmt === false) {
         return null;
     }
-    $stmt->bind_param($type, ...$params); // Unpacking the array
+    
+    // Ensure $params is an array; if not, convert it to one
+    if (!is_array($params)) {
+        $params = [$params];
+    }
+    
+    $stmt->bind_param($type, ...$params); // Unpack only if it's an array
     $stmt->execute();
     $stmt->bind_result($id);
     $stmt->fetch();
     $stmt->close();
-    return $id;
+
+    return $id; // Return the fetched id or null if not found
 }
+
 
 // Fetch timeID
 function fetchTimeID($schoolYear, $semester) {
@@ -64,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_acad'])) {
     $lastTwoDigits = substr($parts[1], -2);
     $timeID = $lastTwoDigits . '-' . $semester;
 
-    if (fetchID("SELECT timeID FROM time_period WHERE timeID = ?", $timeID, "s")) {
+    if (fetchID("SELECT timeID FROM time_period WHERE timeID = ?", [$timeID], "s")) {
         echo "<script>alert('Academic year and semester combination already exists.'); window.location.href = 'admin.php';</script>";
     } else {
         if (executeSQL("INSERT INTO time_period (timeID, SchoolYear, semester) VALUES (?, ?, ?)", "sss", $timeID, $newSchoolYear, $semester)) {
@@ -99,7 +107,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_degree'])) {
         // Check if the degree program already exists
         if (fetchID("SELECT degprogID FROM deg_prog WHERE degprogID = ?", $degprogID, "s")) {
             echo "<script>alert('Degree program already exists.'); window.location.href = 'admin.php';</script>";
-        } else {
+        }
+         else {
             // If it does not exist, insert it
             if (executeSQL("INSERT INTO deg_prog (degprogID, name) VALUES (?, ?)", "ss", $degprogID, $name)) {
                 echo "<script>alert('Degree program added successfully.'); window.location.href = 'admin.php';</script>";

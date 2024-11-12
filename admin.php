@@ -53,7 +53,7 @@
                             <button type="submit" class="btn btn-primary green border-0" name="add_acad">Add</button>
                         </form>
                         <br /><br />
-                        <form method="POST" action="" onsubmit="return confirmDelete()">
+                        <form method="POST" action="admin_op.php" onsubmit="return confirmDelete()">
                             <div class="form-group">
                                 <label for="existingSY">Existing Academic Year:</label>
                                 <select class="form-control" id="existingSY" name="existingSY">
@@ -80,7 +80,7 @@
                             <button type="submit" class="btn btn-primary green border-0" name="add_degree">Add</button>
                         </form>
                         <br /><br />
-                        <form method="POST" action="" onsubmit="return confirmDelete()">
+                        <form method="POST" action="admin_op.php" onsubmit="return confirmDelete()">
                             <div class="form-group">
                                 <label for="existingSY">Existing Degree Programs:</label>
                                 <select class="form-control" id="existingSY" name="existingSY">
@@ -193,7 +193,7 @@
                             <button type="submit" class="btn btn-primary green border-0" name="action" value="add_deginfo">Add</button>
                         </form>
                         <br /><br />
-                        <form method="POST" action="" onsubmit="return confirmDelete()">
+                        <form method="POST" action="admin_op.php" onsubmit="return confirmDelete()">
                             <div class="form-group">
                                 <label for="existingDPI">Existing Degree Program Information:</label>
                                 <select class="form-control" id="existingDPI" name="existingDPI">
