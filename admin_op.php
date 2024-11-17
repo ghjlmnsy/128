@@ -169,7 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_degree'])) {
         }
          else {
             // If it does not exist, insert it
-            if (executeSQL("INSERT INTO deg_prog (degprogID, name) VALUES (?, ?)", "ss", $degprogID, $name)) {
+            if (executeSQL("INSERT INTO deg_prog (degprogID, name) VALUES (?, ?)", "ss", [$degprogID, $name])) {
                 echo "<script>alert('Degree program added successfully.'); window.location.href = 'admin.php';</script>";
             } else {
                 echo "<script>alert('Error adding degree program.'); window.location.href = 'admin.php';</script>";
@@ -178,18 +178,78 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_degree'])) {
     }
 }
 
-// Delete degree program function
+// Delete degree program
 if (isset($_POST['delete_degree']) && isset($_POST['existingSY'])) {
     $degprogID = $conn->real_escape_string($_POST['existingSY']);
 
-    $deleteSql = "DELETE FROM deg_prog WHERE degprogID = ?";
-    if (executeSQL($deleteSql, "s", $degprogID)) {
+    // Check for dependencies in all relevant tables
+    $dependencyCheckQueries = [
+        "SELECT COUNT(*) AS count FROM college_degree WHERE degprogID = ?",
+        "SELECT COUNT(*) AS count FROM faculty WHERE timeID = ?",
+        "SELECT COUNT(*) AS count FROM event WHERE timeID = ?"
+    ];
+
+    $hasDependencies = false;
+
+    foreach ($dependencyCheckQueries as $query) {
+        $stmt = $conn->prepare($query);
+        if (!$stmt) {
+            echo "<script type='text/javascript'>
+                    alert('Database error: Unable to prepare statement.');
+                    window.location.href = 'admin.php';
+                  </script>";
+            exit;
+        }
+
+        if (strpos($query, 'timeID') !== false) {
+            $stmt->bind_param("s", $degprogID); 
+        } else {
+            $stmt->bind_param("s", $degprogID); 
+        }
+
+        $stmt->execute();
+        $stmt->bind_result($count);
+        $stmt->fetch();
+        $stmt->close();
+
+        if ($count > 0) {
+            $hasDependencies = true;
+            break;
+        }
+    }
+
+    if ($hasDependencies) {
         echo "<script type='text/javascript'>
-                alert('Deleted successfully.');
+                alert('Cannot delete this degree program as it has associated data.');
                 window.location.href = 'admin.php';
               </script>";
+    } else {
+        $deleteQuery = "DELETE FROM deg_prog WHERE degprogID = ?";
+        $stmt = $conn->prepare($deleteQuery);
+        if (!$stmt) {
+            echo "<script type='text/javascript'>
+                    alert('Error preparing delete statement.');
+                    window.location.href = 'admin.php';
+                  </script>";
+            exit;
+        }
+
+        $stmt->bind_param("s", $degprogID);
+        if ($stmt->execute()) {
+            echo "<script type='text/javascript'>
+                    alert('Deleted successfully.');
+                    window.location.href = 'admin.php';
+                  </script>";
+        } else {
+            echo "<script type='text/javascript'>
+                    alert('Error deleting the degree program.');
+                    window.location.href = 'admin.php';
+                  </script>";
+        }
+        $stmt->close();
     }
 }
+
 
 // Add achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_achievement') {
