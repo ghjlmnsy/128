@@ -13,21 +13,22 @@ if ($conn->connect_error) {
 }
 
 // Helper function to execute SQL queries with prepared statements
-function executeSQL($sql, $types, ...$params) {
+function executeSQL($sql, $types, $params) {
     global $conn;
     $stmt = $conn->prepare($sql);
     if ($stmt === false) {
         return false;
     }
+
+    // Ensure $params is an array
+    if (!is_array($params)) {
+        $params = [$params];
+    }
+
     $stmt->bind_param($types, ...$params);
     $result = $stmt->execute();
     $stmt->close();
     return $result;
-}
-
-function redirectToStudentsPage() {
-    header("Location: students.php");
-    exit();
 }
 
 // Helper function to fetch a single column value from the database
@@ -75,21 +76,79 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_acad'])) {
     if (fetchID("SELECT timeID FROM time_period WHERE timeID = ?", [$timeID], "s")) {
         echo "<script>alert('Academic year and semester combination already exists.'); window.location.href = 'admin.php';</script>";
     } else {
-        if (executeSQL("INSERT INTO time_period (timeID, SchoolYear, semester) VALUES (?, ?, ?)", "sss", $timeID, $newSchoolYear, $semester)) {
+        if (executeSQL("INSERT INTO time_period (timeID, SchoolYear, semester) VALUES (?, ?, ?)", "sss", [$timeID, $newSchoolYear, $semester])) {
             echo "<script>alert('Added successfully.'); window.location.href = 'admin.php';</script>";
         } else {
             echo "<script>alert('Error adding record.'); window.location.href = 'admin.php';</script>";
         }
-    }
+    }    
 }
 
 // Delete academic year
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_acad'])) {
     list($schoolYear, $semester) = array_map('trim', explode(",", $_POST['existingSY']));
-    if (executeSQL("DELETE FROM time_period WHERE SchoolYear = ? AND semester = ?", "ss", $schoolYear, $semester)) {
-        echo "<script>alert('Deleted successfully.'); window.location.href = 'admin.php';</script>";
+
+    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", [$schoolYear, $semester], "ss");
+
+    if ($timeID) {
+        // Check if the timeID is referenced in other tables
+        $dependencyCheckQueries = [
+            "SELECT COUNT(*) AS count FROM college_degree WHERE timeID = ?",
+            "SELECT COUNT(*) AS count FROM event WHERE timeID = ?",
+            "SELECT COUNT(*) AS count FROM faculty WHERE timeID = ?",
+            "SELECT COUNT(*) AS count FROM publication WHERE timeID = ?"
+        ];
+
+        $hasDependencies = false;
+
+        foreach ($dependencyCheckQueries as $query) {
+            $stmt = $conn->prepare($query);
+            if (!$stmt) {
+                echo "<script type='text/javascript'>
+                        alert('Database error: Unable to prepare statement.');
+                        window.location.href = 'admin.php';
+                      </script>";
+                exit;
+            }
+
+            $stmt->bind_param("s", $timeID);
+            $stmt->execute();
+            $stmt->bind_result($count);
+            $stmt->fetch();
+            $stmt->close();
+
+            if ($count > 0) {
+                $hasDependencies = true;
+                break;
+            }
+        }
+
+        if ($hasDependencies) {
+            echo "<script type='text/javascript'>
+                    alert('Cannot delete this academic year as it has associated data.');
+                    window.location.href = 'admin.php';
+                  </script>";
+        } else {
+            if (executeSQL("DELETE FROM time_period WHERE SchoolYear = ? AND semester = ?", "ss", [$schoolYear, $semester])) {
+                echo "<script type='text/javascript'>
+                        alert('Deleted successfully.');
+                        window.location.href = 'admin.php';
+                      </script>";
+            } else {
+                echo "<script type='text/javascript'>
+                        alert('Error deleting the academic year.');
+                        window.location.href = 'admin.php';
+                      </script>";
+            }
+        }
+    } else {
+        echo "<script type='text/javascript'>
+                alert('Academic year not found.');
+                window.location.href = 'admin.php';
+              </script>";
     }
 }
+
 
 // Add degree program
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_degree'])) {
