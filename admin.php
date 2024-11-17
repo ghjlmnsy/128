@@ -246,7 +246,7 @@
                             <button type="submit" class="btn btn-primary green border-0" name="action" value="add_publication">Add</button>
                         </form>
                         <br /><br />
-                        <form method="POST" action="" onsubmit="return confirmDelete()">
+                        <form method="POST" action="admin_op.php" onsubmit="return confirmDelete()">
                             <div class="form-group">
                                 <label for="existingPub">Existing Publications:</label>
                                 <select class="form-control" id="existingPub" name="existingPub">

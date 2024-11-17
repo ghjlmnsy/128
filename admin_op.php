@@ -250,7 +250,6 @@ if (isset($_POST['delete_degree']) && isset($_POST['existingSY'])) {
     }
 }
 
-
 // Add achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_achievement') {
     // Retrieve form data and trim whitespace
@@ -473,19 +472,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 
     // Check if a valid timeID was found
-    if ($timeID) {
+    if (isset($timeID) && $timeID) {
         // Insert the new publication into the publication table
         $stmt = $conn->prepare("INSERT INTO publication (title, timeID, count) VALUES (?, ?, ?)");
         if ($stmt) {
             $stmt->bind_param("ssi", $title, $timeID, $count);
             if ($stmt->execute()) {
                 echo "<script type='text/javascript'>
-                        alert('Added successfully.');
+                        alert('Publication added successfully.');
                         window.location.href = 'admin.php';
                       </script>";
             } else {
                 echo "<script type='text/javascript'>
-                        alert('Error adding: " . $stmt->error . "');
+                        alert('Error adding publication: " . $stmt->error . "');
                         window.location.href = 'admin.php';
                     </script>";
             }
@@ -515,6 +514,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
               </script>";
     }
 }
+
+
 
 
 // Add faculty information
