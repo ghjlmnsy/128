@@ -68,8 +68,11 @@ $(document).ready(function() {
     
     // When a card element is clicked, add the 'zoomed' class and display the overlay
     $('.card').on('click', function() {
-      $(this).addClass('zoomed');
-      $('#overlay').show();
+      // Disable zoom-in function for admin cards
+      if (!$(this).closest('#timeDataSection, #studentDataSection, #facultyDataSection').length) {
+        $(this).addClass('zoomed');
+        $('#overlay').show();
+      }
     });
 
     // Prevent canvas clicks inside the card from propagating to the card click event
@@ -119,4 +122,32 @@ $(document).ready(function() {
       event.preventDefault();
     }
   });
+});
+
+document.getElementById('chooseForms').addEventListener('change', function() {
+    const selectedValue = this.value;
+    const sections = document.querySelectorAll('.data-section');
+
+    console.log('Selected Value:', selectedValue); // Debugging line
+
+    sections.forEach(section => {
+        if (section.id.toLowerCase().includes(selectedValue)) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    });
+});
+
+// Initially show only Time Data
+document.addEventListener('DOMContentLoaded', function() {
+    const sections = document.querySelectorAll('.data-section');
+
+    sections.forEach(section => {
+        if (section.id.toLowerCase().includes('time')) {
+            section.style.display = 'block';
+        } else {
+            section.style.display = 'none';
+        }
+    });
 });
