@@ -252,10 +252,9 @@ if (isset($_POST['delete_degree']) && isset($_POST['existingSY'])) {
 
 // Add achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_achievement') {
-    // Collect POST data
-    $awardType = isset($_POST['awardType']) ? trim($_POST['awardType']) : '';
-    $degprogID = isset($_POST['degprogID']) ? trim($_POST['degprogID']) : '';
-    $count = isset($_POST['count']) ? trim($_POST['count']) : '';
+    $awardType = trim($_POST['awardType']);
+    $degprogID = trim($_POST['degprogID']);
+    $count = trim($_POST['count']);
 
     // Ensure degprogID is in correct format
     $degprogArray = explode(' ', $degprogID);
@@ -333,19 +332,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
     $stmt->close();
 
-    // Insert the new achievement into the student_awards table
-    $stmt = $conn->prepare("INSERT INTO student_awards (awardtypeID, degID, count) VALUES (?, ?, ?)");
-    $stmt->bind_param("ssi", $awardtypeID, $degID, $count);
-    if ($stmt->execute()) {
-        echo "<script type='text/javascript'>
-                alert('Achievement added successfully.');
-                window.location.href = 'admin.php';
-              </script>";
+    // Check if the achievement already exists
+    $stmt = $conn->prepare("SELECT count FROM student_awards WHERE awardtypeID = ? AND degID = ?");
+    $stmt->bind_param("ii", $awardtypeID, $degID);
+    $stmt->execute();
+    $stmt->bind_result($existingCount);
+    if ($stmt->fetch()) {
+        // If the record exists, update the count
+        $newCount = $existingCount + (int)$count;
+        $stmt->close();
+        
+        $stmt = $conn->prepare("UPDATE student_awards SET count = ? WHERE awardtypeID = ? AND degID = ?");
+        $stmt->bind_param("iii", $newCount, $awardtypeID, $degID);
+        if ($stmt->execute()) {
+            echo "<script type='text/javascript'>
+                    alert('Achievement count updated successfully.');
+                    window.location.href = 'admin.php';
+                  </script>";
+        } else {
+            echo "<script type='text/javascript'>
+                    alert('Error updating achievement: " . $stmt->error . "');
+                    window.history.back();
+                  </script>";
+        }
     } else {
-        echo "<script type='text/javascript'>
-                alert('Error adding achievement: " . $stmt->error . "');
-                window.history.back();
-            </script>";
+        // If the record doesn't exist, insert a new achievement
+        $stmt->close();
+        
+        $stmt = $conn->prepare("INSERT INTO student_awards (awardtypeID, degID, count) VALUES (?, ?, ?)");
+        $stmt->bind_param("iii", $awardtypeID, $degID, $count);
+        if ($stmt->execute()) {
+            echo "<script type='text/javascript'>
+                    alert('Achievement added successfully.');
+                    window.location.href = 'admin.php';
+                  </script>";
+        } else {
+            echo "<script type='text/javascript'>
+                    alert('Error adding achievement: " . $stmt->error . "');
+                    window.history.back();
+                  </script>";
+        }
     }
     $stmt->close();
 }
