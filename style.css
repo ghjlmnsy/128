@@ -158,6 +158,23 @@ h2 {
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
   outline-color: #8e1537;
   border-color: #8e1537;
+  flex: 1 1 30%;
+  display: flex;
+  flex-direction: column;
+  margin: 10px; /* Add margin to each card */
+}
+
+.card-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px; /* Add gap between cards */
+}
+
+.card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .sidenav {

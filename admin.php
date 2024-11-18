@@ -39,9 +39,11 @@
                     </select>
                 </div>
             </form>
+            <br>
+            <br>
             <div id="timeDataSection" class="data-section">
-                <div class="card-columns m-4">
-                    <div class="p-3 chart-card m-2 card">
+                <div class="card-columns">
+                    <div class="card p-3 m-3">
                         <div class="card-header">Update Academic Year & Semester</div>
                         <div class="card-body">
                             <form id="academicYearForm" action="admin_op.php" method="post">
@@ -75,7 +77,7 @@
                             </form>
                         </div>
                     </div>
-                    <div class="p-3 chart-card m-2 card">
+                    <div class="card p-3 m-3">
                         <div class="card-header">Update Degree Program</div>
                         <div class="card-body">
                             <form id="degreeProgramForm" action="admin_op.php" method="post">
@@ -106,8 +108,8 @@
                 </div>
             </div>
             <div id="studentDataSection" class="data-section">
-                <div class="card-columns m-4">
-                    <div class="p-3 chart-card m-2 card">
+                <div class="card-columns">
+                    <div class="card p-3 m-3">
                         <div class="card-header">Update Achievements</div>
                         <div class="card-body">
                             <form id="achievementsForm" action="admin_op.php" method="post">
@@ -151,7 +153,7 @@
                             </form>
                         </div>
                     </div>
-                    <div class="p-3 chart-card m-2 card">
+                    <div class="card p-3 m-3">
                         <div class="card-header">Update Degree Program Information</div>
                         <div class="card-body">
                             <form id="degreeProgramInfoForm" action="admin_op.php" method="post">
@@ -221,8 +223,8 @@
                 </div>
             </div>
             <div id="facultyDataSection" class="data-section">
-                <div class="card-columns m-4">
-                    <div class="p-3 chart-card m-2 card">
+                <div class="card-columns">
+                    <div class="card p-3 m-3">
                         <div class="card-header">Update Research/Publications</div>
                         <div class="card-body">
                             <form id="researchForm" action="admin_op.php" method="post">
@@ -272,7 +274,7 @@
                             </form>
                         </div>
                     </div>
-                    <div class="p-3 chart-card m-2 card">
+                    <div class="card p-3 m-3">
                         <div class="card-header">Update Faculty Information</div>
                         <div class="card-body">
                             <form id="facultyInfoForm" action="admin_op.php" method="post">
