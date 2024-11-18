@@ -252,69 +252,81 @@ if (isset($_POST['delete_degree']) && isset($_POST['existingSY'])) {
 
 // Add achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_achievement') {
-    // Retrieve form data and trim whitespace
     $awardType = isset($_POST['awardType']) ? trim($_POST['awardType']) : '';
     $degprogID = isset($_POST['degprogID']) ? trim($_POST['degprogID']) : '';
     $count = isset($_POST['count']) ? trim($_POST['count']) : '';
 
-    // Use PHP explode function to separate yearLevel, degprogID, SchoolYear, semester
-    list($yearLevel, $degprogID, $SchoolYear, $semester) = array_map('trim', explode(' ', $degprogID));
+    $degprogArray = explode(' ', $degprogID);
+    
+    // Ensure we have exactly 4 parts after explode
+    if (count($degprogArray) !== 4) {
+        echo "<script type='text/javascript'>
+                alert('Invalid degprogID format. It should be in the format: yearLevel degprogID SchoolYear semester.');
+                window.history.back();
+            </script>";
+        return;
+    }
+
+    list($yearLevel, $degprogID, $SchoolYear, $semester) = array_map('trim', $degprogArray);
 
     // Ensure required fields are not empty
     if (empty($awardType) || empty($degprogID) || empty($yearLevel) || empty($SchoolYear) || empty($semester) || empty($count)) {
         echo "<script type='text/javascript'>
                 alert('All fields are required.');
-                window.location.href = 'admin.php';
+                window.history.back();
             </script>";
         return;
     }
 
-    // Step 1: Fetch awardtypeID based on award type
+    // Fetch awardtypeID based on award type
     $stmt = $conn->prepare("SELECT awardtypeID FROM award_type WHERE awardType = ?");
     $stmt->bind_param("s", $awardType);
     $stmt->execute();
     $stmt->bind_result($awardtypeID);
-    if ($stmt->fetch()) {
-        // Success: fetched awardtypeID
-    } else {
-        echo "No valid awardtypeID found for the given award type: $awardType.";
+    if (!$stmt->fetch()) {
+        echo "<script type='text/javascript'>
+                alert('No valid award type found for: $awardType.');
+                window.history.back();
+            </script>";
         $stmt->close();
-        $conn->close();
         return;
     }
     $stmt->close();
 
-    // Step 2: Select timeID column in time_period table that matches the given SchoolYear and semester
-    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+    // Debugging: Output SchoolYear and Semester
+    echo "SchoolYear: $SchoolYear, Semester: $semester";  // Temporary debug line
+
+    // Select timeID column in time_period table that matches the given SchoolYear and semester
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE LOWER(SchoolYear) = LOWER(?) AND LOWER(semester) = LOWER(?)");
     $stmt->bind_param("ss", $SchoolYear, $semester);
     $stmt->execute();
     $stmt->bind_result($timeID);
-    if ($stmt->fetch()) {
-        // Success: fetched timeID
-    } else {
-        echo "No valid timeID found for the given SchoolYear: $SchoolYear and semester: $semester.";
+    if (!$stmt->fetch()) {
+        echo "<script type='text/javascript'>
+                alert('No valid time period found for SchoolYear: $SchoolYear and Semester: $semester.');
+                window.history.back();
+            </script>";
         $stmt->close();
-        $conn->close();
         return;
     }
     $stmt->close();
 
-    // Step 3: Select degID column in college_degree table that matches the given yearLevel, degprogID, timeID
+    // Select degID column in college_degree table that matches the given yearLevel, degprogID, timeID
     $stmt = $conn->prepare("SELECT degID FROM college_degree WHERE yearLevel = ? AND degprogID = ? AND timeID = ?");
     $stmt->bind_param("iss", $yearLevel, $degprogID, $timeID);
     $stmt->execute();
     $stmt->bind_result($degID);
-    if ($stmt->fetch()) {
-        // Success: fetched degID
-    } else {
-        echo "No valid degID found for the given yearLevel: $yearLevel, degprogID: $degprogID, and timeID: $timeID.";
+    if (!$stmt->fetch()) {
+        echo "<script type='text/javascript'>
+                alert('No valid degree program found for Year Level: $yearLevel, Degree Program: $degprogID, and Time Period.');
+                window.history.back();
+            </script>";
         $stmt->close();
-        $conn->close();
         return;
     }
     $stmt->close();
 
-    // Step 4: Insert the new achievement information into the student_awards table
+    // Insert the new achievement information into the student_awards table
     $stmt = $conn->prepare("INSERT INTO student_awards (awardtypeID, degID, count) VALUES (?, ?, ?)");
     $stmt->bind_param("ssi", $awardtypeID, $degID, $count);
     if ($stmt->execute()) {
@@ -324,9 +336,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
               </script>";
     } else {
         echo "<script type='text/javascript'>
-                    alert('Error adding: " . $stmt->error . "');
-                    window.location.href = 'admin.php';
-                </script>";
+                alert('Error adding: " . $stmt->error . "');
+                window.history.back();
+            </script>";
     }
     $stmt->close();
 }
@@ -335,22 +347,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_achievement') {
     $achievement = $_POST['existingAchievements'];
 
+    // Split achievement details into components
     list($awardType, $yearLevel, $degprogID, $SchoolYear, $semester) = array_map('trim', explode(',', $achievement));
 
-    $awardtypeID = fetchID("SELECT awardtypeID FROM award_type WHERE awardType = ?", $awardType, "s");
-    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", $SchoolYear, $semester, "ss");
-    $degID = fetchID("SELECT degID FROM college_degree WHERE yearLevel = ? AND degprogID = ? AND timeID = ?", $yearLevel, $degprogID, $timeID, "sss");
+    // Fetch awardtypeID
+    $awardtypeID = fetchID("SELECT awardtypeID FROM award_type WHERE awardType = ?", [$awardType], "s");
+    if (!$awardtypeID) {
+        echo "<script type='text/javascript'>
+                alert('Invalid award type selected.');
+                window.history.back();
+            </script>";
+        return;
+    }
 
-    if ($awardtypeID && $timeID && $degID) {
-        $sql = "DELETE FROM student_awards WHERE awardtypeID = ? AND degID = ?";
-        if (executeSQL($sql, "ii", $awardtypeID, $degID)) {
-            echo "<script type='text/javascript'>
-                    alert('Deleted successfully.');
-                    window.location.href = 'admin.php';
-                  </script>";
-        }
+    // Fetch timeID
+    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", [$SchoolYear, $semester], "ss");
+    if (!$timeID) {
+        echo "<script type='text/javascript'>
+                alert('No matching time period found for the given SchoolYear and semester.');
+                window.history.back();
+            </script>";
+        return;
+    }
+
+    // Fetch degID
+    $degID = fetchID("SELECT degID FROM college_degree WHERE yearLevel = ? AND degprogID = ? AND timeID = ?", [$yearLevel, $degprogID, $timeID], "sss");
+    if (!$degID) {
+        echo "<script type='text/javascript'>
+                alert('No matching degree program found.');
+                window.history.back();
+            </script>";
+        return;
+    }
+
+    // Delete achievement
+    $sql = "DELETE FROM student_awards WHERE awardtypeID = ? AND degID = ?";
+    if (executeSQL($sql, "ii", [$awardtypeID, $degID])) {
+        echo "<script type='text/javascript'>
+                alert('Deleted successfully.');
+                window.location.href = 'admin.php';
+              </script>";
+    } else {
+        echo "<script type='text/javascript'>
+                alert('Error deleting achievement.');
+                window.history.back();
+            </script>";
     }
 }
+
 
 // Add degree program information function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_deginfo') {
@@ -627,8 +671,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 }
-
-
 
 $conn->close();
 ?>
