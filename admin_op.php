@@ -354,11 +354,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Add degree program information function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_deginfo') {
-    $yearLevel = $_POST['yearLevel'];
-    $degprogID = $_POST['degprogID'];
-    $SchoolYear = $_POST['SchoolYear'];
-    $semester = $_POST['semester'];
-    $count = $_POST['count'];
+    $yearLevel = trim($_POST['yearLevel']);
+    $degprogID = trim($_POST['degprogID']);
+    $SchoolYear = trim($_POST['SchoolYear']);
+    $semester = trim($_POST['semester']);
+    $count = trim($_POST['count']);
+
+    // Check if any of the required fields are empty
+    if (empty($yearLevel) || empty($degprogID) || empty($SchoolYear) || empty($semester) || empty($count)) {
+        echo "<script type='text/javascript'>
+                alert('All fields are required.');
+                window.history.back();
+              </script>";
+        exit(); // Stop further execution
+    }
 
     // Select timeID column in time_period table that matches the given SchoolYear and semester
     $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
@@ -368,12 +377,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $stmt->fetch();
     $stmt->close();
 
+    if (!$timeID) {
+        echo "<script type='text/javascript'>
+                alert('Invalid School Year or Semester.');
+                window.history.back();
+              </script>";
+        exit();
+    }
+
     // Create degID by concatenating yearLevel, degprogID, and timeID
     $degID = $yearLevel . $degprogID . $timeID;
 
     // Insert the new degree information into the college_degree table
     $stmt = $conn->prepare("INSERT INTO college_degree (degID, yearLevel, degprogID, timeID, count) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("sssss", $degID, $yearLevel, $degprogID, $timeID, $count);
+
     if ($stmt->execute()) {
         echo "<script type='text/javascript'>
                 alert('Added successfully.');
@@ -382,8 +400,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     } else {
         echo "<script type='text/javascript'>
                 alert('Error adding: " . $stmt->error . "');
-                window.location.href = 'admin.php';
-            </script>";
+                window.history.back();
+              </script>";
     }
     $stmt->close();
 }
