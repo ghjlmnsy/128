@@ -360,7 +360,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $semester = $_POST['semester'];
     $count = $_POST['count'];
 
-    // Step 1: Select timeID column in time_period table that matches the given SchoolYear and semester
+    // Select timeID column in time_period table that matches the given SchoolYear and semester
     $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
     $stmt->bind_param("ss", $SchoolYear, $semester);
     $stmt->execute();
@@ -368,10 +368,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $stmt->fetch();
     $stmt->close();
 
-    // Step 2: Create degID by concatenating yearLevel, degprogID, and timeID
+    // Create degID by concatenating yearLevel, degprogID, and timeID
     $degID = $yearLevel . $degprogID . $timeID;
 
-    // Step 3: Insert the new degree information into the college_degree table
+    // Insert the new degree information into the college_degree table
     $stmt = $conn->prepare("INSERT INTO college_degree (degID, yearLevel, degprogID, timeID, count) VALUES (?, ?, ?, ?, ?)");
     $stmt->bind_param("sssss", $degID, $yearLevel, $degprogID, $timeID, $count);
     if ($stmt->execute()) {
@@ -388,61 +388,103 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $stmt->close();
 }
 
-// Add event function
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_event') {
-    $eventName = isset($_POST['eventName']) ? trim($_POST['eventName']) : '';
-    $schoolYear = isset($_POST['SchoolYear']) ? trim($_POST['SchoolYear']) : '';
-    $semester = isset($_POST['semester']) ? trim($_POST['semester']) : '';
-    $count = isset($_POST['count']) ? trim($_POST['count']) : '';
+// Delete degree program information function
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_deginfo') {
+    $existingDPI = $_POST['existingDPI'];
 
-    // Ensure required fields are not empty
-    if (empty($eventName) || empty($schoolYear) || empty($semester) || empty($count)) {
-        echo "<script type='text/javascript'>
-                alert('All fields are required.');
-                window.location.href = 'admin.php';
-            </script>";
-        return;
-    }
+    // Split the existing degree program information into components
+    list($yearLevel, $degprogID, $SchoolYear, $semester) = array_map('trim', explode(',', $existingDPI));
 
-    // Find the corresponding timeID for the selected SchoolYear and Semester
     $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
-    $stmt->bind_param("ss", $schoolYear, $semester);
+    $stmt->bind_param("ss", $SchoolYear, $semester);
     $stmt->execute();
     $stmt->bind_result($timeID);
     $stmt->fetch();
     $stmt->close();
 
-    if ($timeID) {
-        // Insert the new event into the event table
-        $stmt = $conn->prepare("INSERT INTO event (eventName, timeID, count) VALUES (?, ?, ?)");
-        $stmt->bind_param("ssi", $eventName, $timeID, $count);
-        if ($stmt->execute()) {
-            echo "<script type='text/javascript'>
-                    alert('Added successfully.');
-                    window.location.href = 'admin.php';
-                  </script>";
-        } else {
-            echo "<script type='text/javascript'>
-                    alert('Error adding event: " . $stmt->error . "');
-                    window.location.href = 'admin.php';
-                </script>";
-        }
-        $stmt->close();
+    if (!$timeID) {
+        echo "<script type='text/javascript'>
+                alert('Invalid data: Time Period not found.');
+                window.location.href = 'admin.php';
+              </script>";
+        exit();
     }
-}
 
-// Delete event function
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_event') {
-    $eventName = $_POST['existingEvents'];
+    $degID = $yearLevel . $degprogID . $timeID;
 
-    $sql = "DELETE FROM event WHERE eventName = ?";
-    if (executeSQL($sql, "s", $eventName)) {
+    $stmt = $conn->prepare("DELETE FROM college_degree WHERE degID = ?");
+    $stmt->bind_param("s", $degID);
+
+    if ($stmt->execute()) {
         echo "<script type='text/javascript'>
                 alert('Deleted successfully.');
                 window.location.href = 'admin.php';
               </script>";
+    } else {
+        echo "<script type='text/javascript'>
+                alert('Error deleting: " . $stmt->error . "');
+                window.location.href = 'admin.php';
+              </script>";
     }
+
+    $stmt->close();
 }
+
+// Add event function
+// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_event') {
+//     $eventName = isset($_POST['eventName']) ? trim($_POST['eventName']) : '';
+//     $schoolYear = isset($_POST['SchoolYear']) ? trim($_POST['SchoolYear']) : '';
+//     $semester = isset($_POST['semester']) ? trim($_POST['semester']) : '';
+//     $count = isset($_POST['count']) ? trim($_POST['count']) : '';
+
+//     Ensure required fields are not empty
+//     if (empty($eventName) || empty($schoolYear) || empty($semester) || empty($count)) {
+//         echo "<script type='text/javascript'>
+//                 alert('All fields are required.');
+//                 window.location.href = 'admin.php';
+//             </script>";
+//         return;
+//     }
+
+//     Find the corresponding timeID for the selected SchoolYear and Semester
+//     $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+//     $stmt->bind_param("ss", $schoolYear, $semester);
+//     $stmt->execute();
+//     $stmt->bind_result($timeID);
+//     $stmt->fetch();
+//     $stmt->close();
+
+//     if ($timeID) {
+//         Insert the new event into the event table
+//         $stmt = $conn->prepare("INSERT INTO event (eventName, timeID, count) VALUES (?, ?, ?)");
+//         $stmt->bind_param("ssi", $eventName, $timeID, $count);
+//         if ($stmt->execute()) {
+//             echo "<script type='text/javascript'>
+//                     alert('Added successfully.');
+//                     window.location.href = 'admin.php';
+//                   </script>";
+//         } else {
+//             echo "<script type='text/javascript'>
+//                     alert('Error adding event: " . $stmt->error . "');
+//                     window.location.href = 'admin.php';
+//                 </script>";
+//         }
+//         $stmt->close();
+//     }
+// }
+
+// Delete event function
+// if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_event') {
+//     $eventName = $_POST['existingEvents'];
+
+//     $sql = "DELETE FROM event WHERE eventName = ?";
+//     if (executeSQL($sql, "s", $eventName)) {
+//         echo "<script type='text/javascript'>
+//                 alert('Deleted successfully.');
+//                 window.location.href = 'admin.php';
+//               </script>";
+//     }
+// }
 
 // Add publication function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_publication') {
