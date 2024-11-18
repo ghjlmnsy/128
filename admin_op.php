@@ -515,25 +515,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-
-
-
 // Add faculty information
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'add_faculty_info') {
-    $rankTitle = $_POST['rankTitle'];
-    $educAttainmentDesc = $_POST['educAttainmentDesc'];
-    $SchoolYear = $_POST['SchoolYear'];
-    $semester = $_POST['semester'];
-    $count = (int)$_POST['count'];
+    $rankTitle = trim($_POST['rankTitle']);
+    $educAttainmentDesc = trim($_POST['educAttainmentDesc']);
+    $SchoolYear = trim($_POST['SchoolYear']);
+    $semester = trim($_POST['semester']);
+    $count = (int)trim($_POST['count']);
 
-    $rankID = fetchID("SELECT rankID FROM rank_title WHERE title = ?", $rankTitle, "s");
-    $educAttainmentID = fetchID("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?", $educAttainmentDesc, "s");
+    $rankID = fetchID("SELECT rankID FROM rank_title WHERE title = ?", [$rankTitle], "s");
+    $educAttainmentID = fetchID("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?", [$educAttainmentDesc], "s");
     $timeID = fetchTimeID($SchoolYear, $semester);
 
-    if ($rankID && $educAttainmentID && $timeID && executeSQL("INSERT INTO faculty (rankID, educAttainmentID, timeID, count) VALUES (?, ?, ?, ?)", "sssi", $rankID, $educAttainmentID, $timeID, $count)) {
+    if (!$rankID || !$educAttainmentID || !$timeID) {
+        echo "<script>alert('Invalid data provided. Please check input values.'); window.location.href = 'admin.php';</script>";
+        error_log("rankID: $rankID, educAttainmentID: $educAttainmentID, timeID: $timeID");
+        exit();
+    }
+
+    $result = executeSQL("INSERT INTO faculty (rankID, educAttainmentID, timeID, count) VALUES (?, ?, ?, ?)", 
+                          "sssi", [$rankID, $educAttainmentID, $timeID, $count]);
+    
+    if ($result) {
         echo "<script>alert('Added successfully.'); window.location.href = 'admin.php';</script>";
     } else {
         echo "<script>alert('Error adding faculty information.'); window.location.href = 'admin.php';</script>";
+        error_log("Failed to execute SQL query.");
     }
 }
 
@@ -541,15 +548,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_faculty_info') {
     $facultyInfo = $_POST['existingfacultyInfo'];
 
+    // Split faculty information into components
     list($title, $attainment, $SchoolYear, $semester) = array_map('trim', explode(',', $facultyInfo));
 
-    $rankID = fetchID("SELECT rankID FROM rank_title WHERE title = ?", $title, "s");
-    $educAttainmentID = fetchID("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?", $attainment, "s");
-    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", $SchoolYear, $semester, "ss");
+    // Fetch IDs using the corrected number of arguments
+    $rankID = fetchID("SELECT rankID FROM rank_title WHERE title = ?", [$title], "s");
+    $educAttainmentID = fetchID("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?", [$attainment], "s");
+    $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", [$SchoolYear, $semester], "ss");
 
+    // Proceed if all IDs are successfully retrieved
     if ($rankID && $educAttainmentID && $timeID) {
         $sql = "DELETE FROM faculty WHERE rankID = ? AND educAttainmentID = ? AND timeID = ?";
-        if (executeSQL($sql, "sss", $rankID, $educAttainmentID, $timeID)) {
+        if (executeSQL($sql, "sss", [$rankID, $educAttainmentID, $timeID])) {
             echo "<script type='text/javascript'>
                     alert('Deleted successfully.');
                     window.location.href = 'admin.php';
@@ -557,6 +567,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         }
     }
 }
+
+
 
 $conn->close();
 ?>
