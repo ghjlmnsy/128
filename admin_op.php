@@ -252,13 +252,14 @@ if (isset($_POST['delete_degree']) && isset($_POST['existingSY'])) {
 
 // Add achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add_achievement') {
+    // Collect POST data
     $awardType = isset($_POST['awardType']) ? trim($_POST['awardType']) : '';
     $degprogID = isset($_POST['degprogID']) ? trim($_POST['degprogID']) : '';
     $count = isset($_POST['count']) ? trim($_POST['count']) : '';
 
+    // Ensure degprogID is in correct format
     $degprogArray = explode(' ', $degprogID);
     
-    // Ensure we have exactly 4 parts after explode
     if (count($degprogArray) !== 4) {
         echo "<script type='text/javascript'>
                 alert('Invalid degprogID format. It should be in the format: yearLevel degprogID SchoolYear semester.');
@@ -269,7 +270,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     list($yearLevel, $degprogID, $SchoolYear, $semester) = array_map('trim', $degprogArray);
 
-    // Ensure required fields are not empty
+    // Validate required fields
     if (empty($awardType) || empty($degprogID) || empty($yearLevel) || empty($SchoolYear) || empty($semester) || empty($count)) {
         echo "<script type='text/javascript'>
                 alert('All fields are required.');
@@ -278,7 +279,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         return;
     }
 
-    // Fetch awardtypeID based on award type
+    // Ensure 'count' is a valid positive integer
+    if (!is_numeric($count) || (int)$count <= 0) {
+        echo "<script type='text/javascript'>
+                alert('Count must be a positive number.');
+                window.history.back();
+            </script>";
+        return;
+    }
+
+    // Fetch awardTypeID based on award type
     $stmt = $conn->prepare("SELECT awardtypeID FROM award_type WHERE awardType = ?");
     $stmt->bind_param("s", $awardType);
     $stmt->execute();
@@ -293,10 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
     $stmt->close();
 
-    // Debugging: Output SchoolYear and Semester
-    echo "SchoolYear: $SchoolYear, Semester: $semester";  // Temporary debug line
-
-    // Select timeID column in time_period table that matches the given SchoolYear and semester
+    // Select timeID from time_period table for the given SchoolYear and semester
     $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE LOWER(SchoolYear) = LOWER(?) AND LOWER(semester) = LOWER(?)");
     $stmt->bind_param("ss", $SchoolYear, $semester);
     $stmt->execute();
@@ -311,7 +318,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
     $stmt->close();
 
-    // Select degID column in college_degree table that matches the given yearLevel, degprogID, timeID
+    // Fetch degID from college_degree for the given yearLevel, degprogID, and timeID
     $stmt = $conn->prepare("SELECT degID FROM college_degree WHERE yearLevel = ? AND degprogID = ? AND timeID = ?");
     $stmt->bind_param("iss", $yearLevel, $degprogID, $timeID);
     $stmt->execute();
@@ -326,22 +333,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
     $stmt->close();
 
-    // Insert the new achievement information into the student_awards table
+    // Insert the new achievement into the student_awards table
     $stmt = $conn->prepare("INSERT INTO student_awards (awardtypeID, degID, count) VALUES (?, ?, ?)");
     $stmt->bind_param("ssi", $awardtypeID, $degID, $count);
     if ($stmt->execute()) {
         echo "<script type='text/javascript'>
-                alert('Added successfully.');
+                alert('Achievement added successfully.');
                 window.location.href = 'admin.php';
               </script>";
     } else {
         echo "<script type='text/javascript'>
-                alert('Error adding: " . $stmt->error . "');
+                alert('Error adding achievement: " . $stmt->error . "');
                 window.history.back();
             </script>";
     }
     $stmt->close();
 }
+
 
 // Delete achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_achievement') {
