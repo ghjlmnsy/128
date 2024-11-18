@@ -68,8 +68,11 @@ $(document).ready(function() {
     
     // When a card element is clicked, add the 'zoomed' class and display the overlay
     $('.card').on('click', function() {
-      $(this).addClass('zoomed');
-      $('#overlay').show();
+      // Disable zoom-in function for admin cards
+      if (!$(this).closest('#timeDataSection, #studentDataSection, #facultyDataSection').length) {
+        $(this).addClass('zoomed');
+        $('#overlay').show();
+      }
     });
 
     // Prevent canvas clicks inside the card from propagating to the card click event
