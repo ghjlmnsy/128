@@ -665,7 +665,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 // Add faculty information
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['action'] === 'add_faculty_info') {
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['action']) && $_POST['action'] === 'add_faculty_info') {
     $rankTitle = trim($_POST['rankTitle']);
     $educAttainmentDesc = trim($_POST['educAttainmentDesc']);
     $SchoolYear = trim($_POST['SchoolYear']);
@@ -673,12 +673,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     $count = trim($_POST['count']);
 
     // Validate form inputs
-    if (empty($rankTitle) || empty($educAttainmentDesc) || empty($SchoolYear) || empty($semester) || empty($count) || !is_numeric($count) || (int)$count <= 0) {
+    if (empty($count)) {
         echo "<script type='text/javascript'>
-                alert('Please enter a valid population number.');
+                alert('Please enter a population number.');
                 window.history.back();
             </script>";
         exit;
+    }
+
+    // Find the corresponding timeID for the selected SchoolYear and Semester
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
+    if ($stmt) {
+        $stmt->bind_param("ss", $schoolYear, $semester);
+        $stmt->execute();
+        $stmt->bind_result($timeID);
+        $stmt->fetch();
+        $stmt->close();
     }
 
     $rankID = fetchID("SELECT rankID FROM rank_title WHERE title = ?", [$rankTitle], "s");
@@ -707,29 +717,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     }
 }
 
+
 // Delete faculty information function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_faculty_info') {
     $facultyInfo = $_POST['existingfacultyInfo'];
 
-    // Split faculty information into components
+    if (empty($facultyInfo) || count(explode(',', $facultyInfo)) !== 4) {
+        echo "<script>alert('Invalid faculty information provided.'); window.history.back();</script>";
+        error_log("Invalid facultyInfo format: $facultyInfo");
+        exit();
+    }
+
     list($title, $attainment, $SchoolYear, $semester) = array_map('trim', explode(',', $facultyInfo));
 
-    // Fetch IDs using the corrected number of arguments
     $rankID = fetchID("SELECT rankID FROM rank_title WHERE title = ?", [$title], "s");
     $educAttainmentID = fetchID("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?", [$attainment], "s");
     $timeID = fetchID("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?", [$SchoolYear, $semester], "ss");
 
-    // Proceed if all IDs are successfully retrieved
-    if ($rankID && $educAttainmentID && $timeID) {
-        $sql = "DELETE FROM faculty WHERE rankID = ? AND educAttainmentID = ? AND timeID = ?";
-        if (executeSQL($sql, "sss", [$rankID, $educAttainmentID, $timeID])) {
-            echo "<script type='text/javascript'>
-                    alert('Deleted successfully.');
-                    window.location.href = 'admin.php';
-                  </script>";
+    if (!$rankID || !$educAttainmentID || !$timeID) {
+        echo "<script>alert('Faculty information not found.'); window.history.back();</script>";
+        error_log("Failed to fetch IDs: rankID=$rankID, educAttainmentID=$educAttainmentID, timeID=$timeID");
+        exit();
+    }
+
+    $stmt = $conn->prepare("DELETE FROM faculty WHERE rankID = ? AND educAttainmentID = ? AND timeID = ?");
+    if ($stmt) {
+        $stmt->bind_param("sss", $rankID, $educAttainmentID, $timeID);
+        if ($stmt->execute()) {
+            echo "<script>alert('Deleted successfully.'); window.location.href = 'admin.php';</script>";
+        } else {
+            echo "<script>alert('Error deleting faculty information: " . $stmt->error . "'); window.history.back();</script>";
+            error_log("Delete error: " . $stmt->error);
         }
+        $stmt->close();
+    } else {
+        echo "<script>alert('Failed to prepare the delete statement.'); window.history.back();</script>";
+        error_log("Failed to prepare delete statement.");
     }
 }
+
 
 $conn->close();
 ?>
