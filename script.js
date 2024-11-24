@@ -42,9 +42,9 @@ function validateAchievementsForm() {
 
 // Function to validate Research/Publications form
 function validateResearchForm() {
-  const titleInput = document.getElementById('title').value.trim();
-  const countInput = document.getElementById('count').value.trim();
-  if (titleInput === '' || isNaN(countInput) || countInput === '') {
+  const titleInput = document.getElementById('researchTitle').value.trim();
+  const countInput = document.getElementById('researchCount').value.trim();
+  if (titleInput === '' || isNaN(countInput) || countInput === '' || parseInt(countInput) <= 0) {
     alert('Please fill out the research name and a valid number of participants.');
     return false;
   }
@@ -53,8 +53,8 @@ function validateResearchForm() {
 
 // Function to validate Faculty Information form
 function validateFacultyInfoForm() {
-  const countInput = document.getElementById('count').value.trim();
-  if (isNaN(countInput) || countInput === '') {
+  const countInput = document.getElementById('facultyCount').value.trim();
+  if (isNaN(countInput) || countInput === '' || parseInt(countInput) <= 0) {
     alert('Please enter a valid population number.');
     return false;
   }

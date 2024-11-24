@@ -257,11 +257,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $count = trim($_POST['count']);
 
     // Ensure degprogID is in correct format
-    $degprogArray = explode(' ', $degprogID);
+    $degprogArray = explode(',', $degprogID);
     
     if (count($degprogArray) !== 4) {
         echo "<script type='text/javascript'>
-                alert('Invalid degprogID format. It should be in the format: yearLevel degprogID SchoolYear semester.');
+                alert('Invalid degprogID format. It should be in the format: yearLevel, degprogID, SchoolYear, semester.');
                 window.history.back();
             </script>";
         return;
@@ -303,7 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $stmt->close();
 
     // Select timeID from time_period table for the given SchoolYear and semester
-    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE LOWER(SchoolYear) = LOWER(?) AND LOWER(semester) = LOWER(?)");
+    $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
     $stmt->bind_param("ss", $SchoolYear, $semester);
     $stmt->execute();
     $stmt->bind_result($timeID);
@@ -375,7 +375,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
     $stmt->close();
 }
-
 
 // Delete achievement function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_achievement') {
@@ -590,9 +589,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $count = trim($_POST['count']);
 
     // Validate form inputs
-    if (empty($title) || empty($schoolYear) || empty($semester) || empty($count) || !is_numeric($count) || (int)$count <= 0) {
+    if (empty($title)) {
         echo "<script type='text/javascript'>
-                alert('All fields are required.');
+                alert('Please fill out the research name.');
+                window.history.back();
+            </script>";
+        exit;
+    }
+
+    if (empty($schoolYear) || empty($semester) || empty($count) || !is_numeric($count) || (int)$count <= 0) {
+        echo "<script type='text/javascript'>
+                alert('Please enter a valid number of participants.');
                 window.history.back();
             </script>";
         exit;
@@ -663,7 +670,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
     $educAttainmentDesc = trim($_POST['educAttainmentDesc']);
     $SchoolYear = trim($_POST['SchoolYear']);
     $semester = trim($_POST['semester']);
-    $count = (int)trim($_POST['count']);
+    $count = trim($_POST['count']);
+
+    // Validate form inputs
+    if (empty($rankTitle) || empty($educAttainmentDesc) || empty($SchoolYear) || empty($semester) || empty($count) || !is_numeric($count) || (int)$count <= 0) {
+        echo "<script type='text/javascript'>
+                alert('Please enter a valid population number.');
+                window.history.back();
+            </script>";
+        exit;
+    }
 
     $rankID = fetchID("SELECT rankID FROM rank_title WHERE title = ?", [$rankTitle], "s");
     $educAttainmentID = fetchID("SELECT educAttainmentID FROM educ_attainment WHERE attainment = ?", [$educAttainmentDesc], "s");
@@ -675,14 +691,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action']) && $_POST['a
         exit();
     }
 
-    $result = executeSQL("INSERT INTO faculty (rankID, educAttainmentID, timeID, count) VALUES (?, ?, ?, ?)", 
-                          "sssi", [$rankID, $educAttainmentID, $timeID, $count]);
-    
-    if ($result) {
-        echo "<script>alert('Added successfully.'); window.location.href = 'admin.php';</script>";
+    $stmt = $conn->prepare("INSERT INTO faculty (rankID, educAttainmentID, timeID, count) VALUES (?, ?, ?, ?)");
+    if ($stmt) {
+        $stmt->bind_param("sssi", $rankID, $educAttainmentID, $timeID, $count);
+        if ($stmt->execute()) {
+            echo "<script>alert('Added successfully.'); window.location.href = 'admin.php';</script>";
+        } else {
+            echo "<script>alert('Error adding faculty information: " . $stmt->error . "'); window.location.href = 'admin.php';</script>";
+            error_log("Failed to execute SQL query: " . $stmt->error);
+        }
+        $stmt->close();
     } else {
-        echo "<script>alert('Error adding faculty information.'); window.location.href = 'admin.php';</script>";
-        error_log("Failed to execute SQL query.");
+        echo "<script>alert('Error preparing statement for faculty information insertion.'); window.location.href = 'admin.php';</script>";
+        error_log("Failed to prepare SQL statement.");
     }
 }
 

@@ -227,10 +227,10 @@
                     <div class="card p-3 m-3">
                         <div class="card-header">Update Research/Publications</div>
                         <div class="card-body">
-                            <form id="researchForm" action="admin_op.php" method="post">
+                            <form id="researchForm" action="admin_op.php" method="post" onsubmit="return validateResearchForm()">
                                 <div class="form-group">
                                     <label for="title">Research Name:</label>
-                                    <input type="text" class="form-control" id="title" name="title" placeholder="Enter Research Name">
+                                    <input type="text" class="form-control" id="researchTitle" name="title" placeholder="Enter Research Name">
                                 </div>
                                 <div class="form-group">
                                     <label for="SchoolYear">Year:</label>
@@ -254,7 +254,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="count">PARTICIPANTS:</label>
-                                    <input type="number" class="form-control" id="count" name="count" placeholder="Enter Number of Participants">
+                                    <input type="number" class="form-control" id="researchCount" name="count" placeholder="Enter Number of Participants">
                                 </div>
                                 <button type="submit" class="btn btn-primary green border-0" name="action" value="add_publication">Add</button>
                             </form>
@@ -277,7 +277,7 @@
                     <div class="card p-3 m-3">
                         <div class="card-header">Update Faculty Information</div>
                         <div class="card-body">
-                            <form id="facultyInfoForm" action="admin_op.php" method="post">
+                            <form id="facultyInfoForm" action="admin_op.php" method="post" onsubmit="return validateFacultyInfoForm()">
                                 <div class="form-group">
                                     <label for="rankTitle">Rank Title:</label>
                                     <select class="form-control" id="rankTitle" name="rankTitle" required>
@@ -320,7 +320,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="count">Population:</label>
-                                    <input type="number" class="form-control" id="count" name="count" placeholder="Enter Population Number" required>
+                                    <input type="number" class="form-control" id="facultyCount" name="count" placeholder="Enter Population Number" required>
                                 </div>
                                 <button type="submit" class="btn btn-primary green border-0" name="action" value="add_faculty_info">Add</button>
                             </form>
@@ -354,6 +354,34 @@
 
         function confirmDelete() {
             return confirm('Are you sure you want to delete this item?');
+        }
+
+        function validateResearchForm() {
+            var title = document.getElementById('researchTitle').value.trim();
+            var count = document.getElementById('researchCount').value.trim();
+            
+            if (title === '') {
+                alert('Please fill out the research name.');
+                return false;
+            }
+            
+            if (count === '' || isNaN(count) || parseInt(count) <= 0) {
+                alert('Please enter a valid number of participants.');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function validateFacultyInfoForm() {
+            var count = document.getElementById('facultyCount').value.trim();
+            
+            if (count === '' || isNaN(count) || parseInt(count) <= 0) {
+                alert('Please enter a valid population number.');
+                return false;
+            }
+            
+            return true;
         }
     </script>
     <script src="script.js"></script>
