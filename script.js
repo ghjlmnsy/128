@@ -33,7 +33,7 @@ function validateDegreeProgramForm() {
 // Function to validate Achievements form
 function validateAchievementsForm() {
   const countInput = document.getElementById('count').value.trim();
-  if (isNaN(countInput) || countInput === '') {
+  if (countInput === '' || isNaN(countInput) || parseInt(countInput) <= 0) {
     alert('Please enter a valid population number.');
     return false;
   }
@@ -72,6 +72,7 @@ $(document).ready(function() {
       if (!$(this).closest('#timeDataSection, #studentDataSection, #facultyDataSection').length) {
         $(this).addClass('zoomed');
         $('#overlay').show();
+        $(this).find('.chart-description').show();
       }
     });
 
@@ -84,6 +85,7 @@ $(document).ready(function() {
     $('#overlay').on('click', function() {
       $('.zoomed').removeClass('zoomed');
       $(this).hide();
+      $('.chart-description').hide();
     });
 
     // Listen for the 'Escape' key to close any zoomed card and hide the overlay
@@ -91,6 +93,7 @@ $(document).ready(function() {
       if (event.keyCode === 27) { // 27 is the key code for the escape key
         $('.zoomed').removeClass('zoomed');
         $('#overlay').hide();
+        $('.chart-description').hide();
       }
     });
   }

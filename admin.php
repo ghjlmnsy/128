@@ -135,21 +135,26 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="count">Population:</label>
-                                    <input type="number" class="form-control" id="count" name="count" placeholder="Enter population number">
+                                    <input type="number" class="form-control" id="count" name="count" min=1 placeholder="Enter population number" required/>
                                 </div>
                                 <button type="submit" class="btn btn-primary green border-0" name="action" value="add_achievement">Add</button>
                                 <br /><br />
-                                <div class="form-group">
-                                    <label for="existingAchievements">Existing Achievements:</label>
-                                    <select class="form-control" id="existingAchievements" name="existingAchievements">
-                                        <?php
-                                        foreach ($achievements as $value) {
-                                            echo "<option value='$value'>$value</option>";
-                                        }
-                                        ?>
-                                    </select>
+                                </form>
+                                <form method="POST" action="admin_op.php" onsubmit="return confirmDelete()">
+                                <div>
+                                    <div class="form-group">
+                                        <label for="existingAchievements">Existing Achievements:</label>
+                                        <select class="form-control" id="existingAchievements" name="existingAchievements">
+                                            <?php
+                                            foreach ($achievements as $value) {
+                                                echo "<option value='$value'>$value</option>";
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary maroon border-0" name="action" value="delete_achievement" onclick="return confirmDelete()">Delete</button>
+                                <button type="submit" class="btn btn-primary maroon border-0" name="action" value="delete_achievement">Delete</button>
+                            </form>
                             </form>
                         </div>
                     </div>

@@ -252,3 +252,9 @@ h2 {
   cursor: pointer;
   box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.3);
 }
+
+.chart-description {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #333333;
+}

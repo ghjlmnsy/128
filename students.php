@@ -65,48 +65,56 @@
             <div class="card-header">Total Number of Enrollees per Degree Program</div>
             <div class="card-body">
               <canvas id="enrolleesCourseChart" class="w-100"></canvas>
+              <p class="chart-description" style="display:none;">This chart shows the total number of enrollees per degree program.</p>
             </div>
           </div>
           <div class="p-3 chart-card m-2 card">
             <div class="card-header">Population of University Scholars between Degree Programs</div>
             <div class="card-body">
               <canvas id="USperDegProg" class="w-100"></canvas>
+              <p class="chart-description" style="display:none;">This chart shows the population of university scholars between degree programs.</p>
             </div>
           </div>
           <div class="p-3 chart-card m-2 card">
             <div class="card-header">Population of College Scholars between Degree Programs</div>
             <div class="card-body">
               <canvas id="CSperDegProg" class="w-100"></canvas>
+              <p class="chart-description" style="display:none;">This chart shows the population of college scholars between degree programs.</p>
             </div>
           </div>
           <div class="p-3 chart-card m-2 card">
             <div class="card-header">Population of Semestral Achievers per Semester</div>
             <div class="card-body">
               <canvas id="scholarsChart" class="w-100"></canvas>
+              <p class="chart-description" style="display:none;">This chart shows the population of semestral achievers per semester.</p>
             </div>
           </div>
           <div class="p-3 chart-card m-2 card">
             <div class="card-header">Population of Enrollees per Year</div>
             <div class="card-body">
               <canvas id="enrolleesYearChart" class="w-100"></canvas>
+              <p class="chart-description" style="display:none;">This chart shows the population of enrollees per year.</p>
             </div>
           </div>
             <div class="p-3 chart-card m-2 card">
               <div class="card-header">Population of Graduates with Distinctions </div>
               <div class="card-body"> 
                 <canvas id="PopulationLaudes" class="w-100"></canvas>
+                <p class="chart-description" style="display:none;">This chart shows the population of graduates with distinctions.</p>
               </div>
             </div>
           <div class="p-3 chart-card m-2 card">
             <div class="card-header">Students per Year Level</div>
             <div class="card-body">
               <canvas id="studentsPerYear" class="w-100"></canvas>
+              <p class="chart-description" style="display:none;">This chart shows the number of students per year level.</p>
             </div>
           </div>
             <div class="p-3 chart-card m-2 card">
               <div class="card-header">Enrollment Data</div>
               <div class="card-body">
                 <canvas id="enrollmentData" class="w-100"></canvas>
+                <p class="chart-description" style="display:none;">This chart shows the enrollment data.</p>
               </div>
             </div>
             <div class="p-3 chart-card m-2 card">

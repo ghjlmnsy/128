@@ -292,6 +292,20 @@ $(document).ready(function () {
       },
     });
   });
+
+  $('.card').on('click', function() {
+    $(this).find('.chart-description').show();
+  });
+
+  $('#overlay').on('click', function() {
+    $('.chart-description').hide();
+  });
+
+  $(document).on('keyup', function(event) {
+    if (event.keyCode === 27) {
+      $('.chart-description').hide();
+    }
+  });
 });
 
 // Re-render all charts after data filter is applied
