@@ -75,16 +75,20 @@ $sql3 = buildQuery(
 );
 $charts['numberOfTotalFaculty'] = fetchQueryResults($conn, $sql3);
 
-// Execute SQL query to retrieve the total number of publications per year
+// Execute SQL query to retrieve the total number of indexed and non-indexed publications per year and semester
 $sql4 = buildQuery(
-    "time_period.SchoolYear AS SchoolYear, time_period.semester AS semester, SUM(publication.count) AS totalPublications",
+    "time_period.SchoolYear AS SchoolYear, 
+     time_period.semester AS semester, 
+     COUNT(CASE WHEN publication.is_indexed = 1 THEN 1 END) AS indexedCount, 
+     COUNT(CASE WHEN publication.is_indexed = 0 THEN 1 END) AS nonIndexedCount",
     "publication",
     "JOIN time_period ON publication.timeID = time_period.timeID",
     $timePeriodCondition,
     "time_period.SchoolYear, time_period.semester",
     "time_period.SchoolYear, time_period.semester"
 );
-$charts['numberOfPublications'] = fetchQueryResults($conn, $sql4);
+$charts['indexedNonIndexedPublications'] = fetchQueryResults($conn, $sql4);
+
 
 // Execute SQL query to retrieve the population of faculty by rank per semester
 $sql6 = buildQuery(

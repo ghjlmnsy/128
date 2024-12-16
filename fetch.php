@@ -92,6 +92,7 @@ $event_name = fetchDistinctData($conn, 'eventName', 'event');
 // Fetch existing publications
 $pub_title = fetchDistinctData($conn, 'title', 'publication');
 
+
 // Fetch the existing faculty information
 $sql = "SELECT rt.title, ea.attainment, tp.SchoolYear, tp.semester
         FROM faculty f

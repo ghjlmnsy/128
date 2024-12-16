@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 06, 2024 at 08:22 AM
+-- Generation Time: Dec 16, 2024 at 08:29 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -62,23 +62,23 @@ CREATE TABLE `college_degree` (
 --
 
 INSERT INTO `college_degree` (`degID`, `yearLevel`, `degprogID`, `timeID`, `count`) VALUES
-('1BSAM23-1', 1, 'BSAM', '23-1', 20),
 ('1BSAM23-2', 1, 'BSAM', '23-2', 19),
-('1BSCS23-1', 1, 'BSCS', '23-1', 45),
 ('1BSCS23-2', 1, 'BSCS', '23-2', 42),
 ('1BSDS23-1', 1, 'BSDS', '23-1', 37),
 ('1BSDS23-2', 1, 'BSDS', '23-2', 34),
 ('2BSAM23-1', 2, 'BSAM', '23-1', 17),
 ('2BSAM23-2', 2, 'BSAM', '23-2', 18),
 ('2BSCS23-1', 2, 'BSCS', '23-1', 19),
-('2BSCS23-2', 2, 'BSCS', '23-2', 19),
+('2BSDS26-2', 2, 'BSDS', '26-2', 23),
 ('3BSAM23-1', 3, 'BSAM', '23-1', 25),
 ('3BSAM23-2', 3, 'BSAM', '23-2', 25),
 ('3BSCS23-1', 3, 'BSCS', '23-1', 27),
 ('3BSCS23-2', 3, 'BSCS', '23-2', 25),
+('3BSCS24-1', 3, 'BSCS', '24-1', 34),
+('3BSFT24-1', 3, 'BSFT', '24-1', 23),
+('3BSFT26-2', 3, 'BSFT', '26-2', 23),
 ('4BSAM23-1', 4, 'BSAM', '23-1', 15),
 ('4BSAM23-2', 4, 'BSAM', '23-2', 13),
-('4BSAM26-2', 4, 'BSAM', '26-2', 45),
 ('4BSCS23-1', 4, 'BSCS', '23-1', 34),
 ('4BSCS23-2', 4, 'BSCS', '23-2', 30);
 
@@ -100,7 +100,8 @@ CREATE TABLE `deg_prog` (
 INSERT INTO `deg_prog` (`degprogID`, `name`) VALUES
 ('BSAM', 'Bachelor of Science in  Applied Mathematics'),
 ('BSCS', 'Bachelor of Science in Computer Science'),
-('BSDS', 'Bachelor of Science in Data Science');
+('BSDS', 'Bachelor of Science in Data Science'),
+('BSFT', 'FOOD TEK');
 
 -- --------------------------------------------------------
 
@@ -168,31 +169,24 @@ CREATE TABLE `faculty` (
 --
 
 INSERT INTO `faculty` (`facultyID`, `rankID`, `educAttainmentID`, `timeID`, `count`) VALUES
-(1, 'P1', 'A2', '23-1', 3),
-(2, 'ASSOCP4', 'A3', '23-2', 10),
 (3, 'ASSOCP5', 'A4', '23-1', 5),
-(4, 'ASSISP1', 'A1', '23-2', 8),
-(5, 'ASSISP2', 'A2', '23-1', 12),
 (6, 'ASSISP3', 'A4', '23-2', 23),
-(7, 'ASSISP5', 'A2', '23-2', 6),
 (8, 'ASSISP6', 'A4', '23-1', 2),
 (9, 'INS1', 'A2', '23-2', 2),
 (10, 'INS2', 'A3', '23-1', 4),
-(11, 'P2', 'A1', '23-2', 5),
-(12, 'INS3', 'A2', '23-2', 3),
 (13, 'LEC', 'A2', '23-1', 5),
-(14, 'SLEC', 'A2', '23-2', 1),
 (15, 'P3', 'A2', '23-1', 8),
-(16, 'P4', 'A1', '23-2', 10),
 (17, 'P5', 'A2', '23-1', 10),
-(18, 'P6', 'A1', '23-2', 4),
 (19, 'ASSOCP1', 'A3', '23-1', 6),
 (20, 'ASSOCP2', 'A4', '23-2', 11),
 (21, 'ASSOCP3', 'A2', '23-1', 13),
-(22, 'ASSISP1', 'A1', '26-1', 5),
-(23, 'LEC', 'A3', '26-1', 5),
 (24, 'ASSOCP2', 'A3', '26-1', 5),
-(27, 'LEC', 'A1', '26-1', 24);
+(28, 'ASSISP1', 'A1', '24-1', 6),
+(29, 'ASSISP1', 'A1', '24-1', 4),
+(30, 'ASSOCP4', 'A3', '24-1', 12),
+(33, 'LEC', 'A3', '26-1', 12),
+(35, 'INS3', 'A1', '24-2', 1),
+(43, 'P3', 'A3', '26-1', 23);
 
 -- --------------------------------------------------------
 
@@ -204,19 +198,21 @@ CREATE TABLE `publication` (
   `publicationID` int(11) NOT NULL,
   `title` varchar(50) DEFAULT NULL,
   `timeID` varchar(4) DEFAULT NULL,
-  `count` int(1) DEFAULT NULL
+  `count` int(1) DEFAULT NULL,
+  `is_indexed` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Dumping data for table `publication`
 --
 
-INSERT INTO `publication` (`publicationID`, `title`, `timeID`, `count`) VALUES
-(1, 'Research 1', '23-2', 3),
-(2, 'Research 2', '23-1', 2),
-(3, 'Research 3', '23-2', 4),
-(4, 'Research 4', '23-1', 3),
-(5, 'Research 5', '23-2', 5);
+INSERT INTO `publication` (`publicationID`, `title`, `timeID`, `count`, `is_indexed`) VALUES
+(1, 'Research 1', '23-2', 3, 0),
+(2, 'Research 2', '23-1', 2, 0),
+(3, 'Research 3', '23-2', 4, 0),
+(27, 'Pasyente Project', '23-2', 12, 0);
+
+
 
 -- --------------------------------------------------------
 
@@ -275,17 +271,10 @@ CREATE TABLE `student_awards` (
 --
 
 INSERT INTO `student_awards` (`awardID`, `awardTypeID`, `degID`, `count`) VALUES
-(1, 'US', '1BSAM23-1', 45),
-(2, 'US', '1BSCS23-2', 45),
-(3, 'US', '2BSCS23-1', 18),
-(4, 'CS', '2BSCS23-2', 20),
-(7, 'CS', '1BSDS23-1', 45),
-(8, 'CS', '1BSDS23-2', 45),
-(9, 'CS', '1BSAM23-2', 45),
-(10, 'US', '2BSAM23-1', 23),
-(11, 'CS', '2BSAM23-2', 12),
-(14, 'US', '1BSCS23-1', 45),
-(21, 'SCL', '4BSAM26-2', 12);
+(38, 'MCL', '4BSCS23-2', 23),
+(39, 'US', '1BSAM23-2', 24),
+(41, 'US', '1BSDS23-1', 46),
+(42, 'SCL', '4BSCS23-2', 34);
 
 -- --------------------------------------------------------
 
@@ -398,19 +387,19 @@ ALTER TABLE `event`
 -- AUTO_INCREMENT for table `faculty`
 --
 ALTER TABLE `faculty`
-  MODIFY `facultyID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `facultyID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- AUTO_INCREMENT for table `publication`
 --
 ALTER TABLE `publication`
-  MODIFY `publicationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `publicationID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `student_awards`
 --
 ALTER TABLE `student_awards`
-  MODIFY `awardID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `awardID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
 
 --
 -- Constraints for dumped tables

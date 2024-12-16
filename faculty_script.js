@@ -22,10 +22,11 @@ function renderCharts(data) {
   // renderNumberOfPublications(data.numberOfPublications);
   renderFacultySembyRank(data.facultySembyRank);
   renderFacultyByEducAttainment(data.facultyByEducAttainment);
+  renderIndexedNonIndexedPublications(data.indexedNonIndexedPublications);
 }
 
 // Chart variables for handling re-rendering
-var ratioByRankChart, ratioByEducChart, totalFacultyChart, facultySembyRankChart, facultyByEducAttainmentChart;
+var ratioByRankChart, ratioByEducChart, totalFacultyChart, facultySembyRankChart, facultyByEducAttainmentChart,  indexedNonIndexedChart;
 
 function renderRatioByRank(chartData) {
   var ctx = document.getElementById("ratioByRank").getContext("2d");
@@ -266,37 +267,73 @@ function renderFacultyByEducAttainment(chartData) {
   });
 }
 
-var ctx = document.getElementById('indexedNonIndexedPublications').getContext('2d');
-var indexedNonIndexedPublicationsChart = new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: ['Semester 1', 'Semester 2'],
-    datasets: [
-      {
-        label: 'Indexed Publications',
-        data: [10, 15],
-        backgroundColor: '#8E1537',
-        borderWidth: 1
-      },
-      {
-        label: 'Non-Indexed Publications',
-        data: [5, 8],
-        backgroundColor: '#FFB81D',
-        borderWidth: 1
-      }
-    ]
-  },
-  options: {
-    scales: {
-      x: {
-        stacked: true
-      },
-      y: {
-        stacked: true
-      }
-    }
+
+function renderIndexedNonIndexedPublications(chartData) {
+  // Prepare data for chart labels and datasets
+  var labels = chartData.map(
+      (item) => item.SchoolYear + " Semester " + item.semester
+  );
+  var indexedData = chartData.map(item => item.indexedCount);
+  var nonIndexedData = chartData.map(item => item.nonIndexedCount);
+
+  // Get the canvas context for rendering the chart
+  var ctx = document.getElementById('indexedNonIndexedPublications').getContext('2d');
+
+  // Destroy the existing chart instance to prevent overlapping charts
+  if (indexedNonIndexedChart) {
+      indexedNonIndexedChart.destroy();
   }
-});
+
+  // Create a new chart
+  indexedNonIndexedChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+          labels: labels,
+          datasets: [
+              {
+                  label: 'Indexed Publications',
+                  data: indexedData,
+                  backgroundColor: '#8E1537',  // Color for indexed publications
+                  borderWidth: 1
+              },
+              {
+                  label: 'Non-Indexed Publications',
+                  data: nonIndexedData,
+                  backgroundColor: '#005740',  // Color for non-indexed publications
+                  borderWidth: 1
+              }
+          ]
+      },
+      options: {
+          responsive: true,
+          plugins: {
+              legend: {
+                  display: true,
+                  position: 'top'
+              }
+          },
+          scales: {
+              x: {
+                  stacked: true,
+                  title: {
+                      display: true,
+                      text: 'Academic Period'
+                  }
+              },
+              y: {
+                  stacked: true,
+                  title: {
+                      display: true,
+                      text: 'Number of Publications'
+                  },
+                  beginAtZero: true
+              }
+          }
+      }
+  });
+}
+
+
 
 // Event listener for filter button, used to fetch data based on filter criteria
 $(document).ready(function () {

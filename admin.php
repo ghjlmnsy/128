@@ -238,6 +238,13 @@
                                     <input type="text" class="form-control" id="researchTitle" name="title" placeholder="Enter Research Name">
                                 </div>
                                 <div class="form-group">
+                                    <label for="index">Indexed or Non-Indexed:</label>
+                                    <select class="form-control" id="index" name="index" required>
+                                        <option value="1">Indexed</option>
+                                        <option value="0">Non-Indexed</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
                                     <label for="SchoolYear">Year:</label>
                                     <select class="form-control" id="SchoolYear" name="SchoolYear">
                                         <?php

@@ -607,8 +607,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $schoolYear = trim($_POST['SchoolYear']);
     $semester = trim($_POST['semester']);
     $count = trim($_POST['count']);
+    $index = $_POST['index']; // 1 for Indexed, 0 for Non-Indexed
 
-    // Validate form inputs
+    // Validate form inputs (same as before)
     if (empty($title)) {
         echo "<script type='text/javascript'>
                 alert('Please fill out the research name.');
@@ -637,10 +638,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     // Check if a valid timeID was found
     if (isset($timeID) && $timeID) {
-        // Insert the new publication into the publication table
-        $stmt = $conn->prepare("INSERT INTO publication (title, timeID, count) VALUES (?, ?, ?)");
+        // Insert the new publication into the publication table with the indexed status
+        $stmt = $conn->prepare("INSERT INTO publication (title, timeID, count, is_indexed) VALUES (?, ?, ?, ?)");
         if ($stmt) {
-            $stmt->bind_param("ssi", $title, $timeID, $count);
+            $stmt->bind_param("ssii", $title, $timeID, $count, $index);
             if ($stmt->execute()) {
                 echo "<script type='text/javascript'>
                         alert('Publication added successfully.');
@@ -666,6 +667,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
               </script>";
     }
 }
+
 
 // Delete publication function
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_publication') {
