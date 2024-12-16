@@ -265,8 +265,8 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="count">PARTICIPANTS:</label>
-                                    <input type="number" class="form-control" id="researchCount" name="count" placeholder="Enter Number of Participants">
+                                    <label for="count">Count:</label>
+                                    <input type="number" class="form-control" id="researchCount" name="count" placeholder="Count">
                                 </div>
                                 <button type="submit" class="btn btn-primary green border-0" name="action" value="add_publication">Add</button>
                             </form>

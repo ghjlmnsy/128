@@ -79,8 +79,8 @@ $charts['numberOfTotalFaculty'] = fetchQueryResults($conn, $sql3);
 $sql4 = buildQuery(
     "time_period.SchoolYear AS SchoolYear, 
      time_period.semester AS semester, 
-     COUNT(CASE WHEN publication.is_indexed = 1 THEN 1 END) AS indexedCount, 
-     COUNT(CASE WHEN publication.is_indexed = 0 THEN 1 END) AS nonIndexedCount",
+     SUM(CASE WHEN publication.is_indexed = 1 THEN publication.count ELSE 0 END) AS indexedCount, 
+     SUM(CASE WHEN publication.is_indexed = 0 THEN publication.count ELSE 0 END) AS nonIndexedCount",
     "publication",
     "JOIN time_period ON publication.timeID = time_period.timeID",
     $timePeriodCondition,

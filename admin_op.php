@@ -607,66 +607,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     $schoolYear = trim($_POST['SchoolYear']);
     $semester = trim($_POST['semester']);
     $count = trim($_POST['count']);
-    $index = $_POST['index']; // 1 for Indexed, 0 for Non-Indexed
+    $is_indexed = isset($_POST['index']) ? (int)$_POST['index'] : 0; // 1 for Indexed, 0 for Non-Indexed
 
-    // Validate form inputs (same as before)
-    if (empty($title)) {
+    // Validate inputs
+    if (empty($title) || empty($schoolYear) || empty($semester) || !is_numeric($count) || (int)$count <= 0) {
         echo "<script type='text/javascript'>
-                alert('Please fill out the research name.');
+                alert('Please fill in all fields and ensure count is a positive number.');
                 window.history.back();
-            </script>";
+              </script>";
         exit;
     }
 
-    if (empty($schoolYear) || empty($semester) || empty($count) || !is_numeric($count) || (int)$count <= 0) {
-        echo "<script type='text/javascript'>
-                alert('Please enter a valid number of participants.');
-                window.history.back();
-            </script>";
-        exit;
-    }
-
-    // Find the corresponding timeID for the selected SchoolYear and Semester
+    // Find the corresponding timeID
     $stmt = $conn->prepare("SELECT timeID FROM time_period WHERE SchoolYear = ? AND semester = ?");
-    if ($stmt) {
-        $stmt->bind_param("ss", $schoolYear, $semester);
-        $stmt->execute();
-        $stmt->bind_result($timeID);
-        $stmt->fetch();
-        $stmt->close();
+    $stmt->bind_param("ss", $schoolYear, $semester);
+    $stmt->execute();
+    $stmt->bind_result($timeID);
+    $stmt->fetch();
+    $stmt->close();
+
+    if (!$timeID) {
+        echo "<script type='text/javascript'>
+                alert('Invalid School Year or Semester.');
+                window.history.back();
+              </script>";
+        exit;
     }
 
-    // Check if a valid timeID was found
-    if (isset($timeID) && $timeID) {
-        // Insert the new publication into the publication table with the indexed status
-        $stmt = $conn->prepare("INSERT INTO publication (title, timeID, count, is_indexed) VALUES (?, ?, ?, ?)");
-        if ($stmt) {
-            $stmt->bind_param("ssii", $title, $timeID, $count, $index);
-            if ($stmt->execute()) {
-                echo "<script type='text/javascript'>
-                        alert('Publication added successfully.');
-                        window.location.href = 'admin.php';
-                      </script>";
-            } else {
-                echo "<script type='text/javascript'>
-                        alert('Error adding publication: " . $stmt->error . "');
-                        window.history.back();
-                      </script>";
-            }
-            $stmt->close();
-        } else {
-            echo "<script type='text/javascript'>
-                    alert('Error preparing statement for publication insertion.');
-                    window.history.back();
-                  </script>";
-        }
+    // Insert publication into the database
+    $stmt = $conn->prepare("INSERT INTO publication (title, timeID, count, is_indexed) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssii", $title, $timeID, $count, $is_indexed);
+    if ($stmt->execute()) {
+        echo "<script type='text/javascript'>
+                alert('Publication added successfully.');
+                window.location.href = 'admin.php';
+              </script>";
     } else {
         echo "<script type='text/javascript'>
-                alert('Invalid School Year or Semester selected.');
+                alert('Error: " . $stmt->error . "');
                 window.history.back();
               </script>";
     }
+    $stmt->close();
 }
+
 
 
 // Delete publication function
