@@ -65,42 +65,49 @@
             <div class="card-header">Population of Faculty by Rank</div>
             <div class="card-body">
               <canvas id="ratioByRank" class="w-100"></canvas>
-              <p class="chart-description" style="display:none;">This chart shows the population of faculty by rank.</p>
+              <p class="chart-description">This chart shows the population of faculty by rank.</p>
             </div>
         </div>
         <div class="p-3 chart-card m-2 card">
           <div class="card-header">Population of Faculty by Educational Attainment</div>
           <div class="card-body">
             <canvas id="ratioByEduc" class="w-100"></canvas>
-            <p class="chart-description" style="display:none;">This chart shows the population of faculty by educational attainment.</p>
+            <p class="chart-description">This chart shows the population of faculty by educational attainment.</p>
           </div>
         </div>
         <div class="p-3 chart-card m-2 card">
           <div class="card-header">Population of Faculty per Semester by Educational Attainment</div>
           <div class="card-body">
             <canvas id="facultyByEducAttainment" class="w-100"></canvas>
-            <p class="chart-description" style="display:none;">This chart shows the population of faculty per semester by educational attainment.</p>
+            <p class="chart-description">This chart shows the population of faculty per semester by educational attainment.</p>
           </div>
         </div>
         <div class="p-3 chart-card m-2 card">
           <div class="card-header">Population of Faculty per Semester by Rank</div>
           <div class="card-body">
             <canvas id="facultySembyRank" class="w-100"></canvas>
-            <p class="chart-description" style="display:none;">This chart shows the population of faculty per semester by rank.</p>
+            <p class="chart-description">This chart shows the population of faculty per semester by rank.</p>
           </div>
         </div>
         <div class="p-3 chart-card m-2 card">
           <div class="card-header">Number of Total Faculty per Semester</div>
           <div class="card-body">
             <canvas id="numberOfTotalFaculty" class="w-100"></canvas>
-            <p class="chart-description" style="display:none;">This chart shows the number of total faculty per semester.</p>
+            <p class="chart-description">This chart shows the number of total faculty per semester.</p>
           </div>
         </div>
-        <div class="p-3 chart-card m-2 card">
+        <!-- <div class="p-3 chart-card m-2 card">
           <div class="card-header">Number of Publications per Semester</div>
           <div class="card-body">
             <canvas id="numberOfPublications" class="w-100"></canvas>
-            <p class="chart-description" style="display:none;">This chart shows the number of publications per semester.</p>
+            <p class="chart-description">This chart shows the number of publications per semester.</p>
+          </div>
+        </div> -->
+        <div class="p-3 chart-card m-2 card">
+          <div class="card-header">Number of Indexed and Non-Indexed Publications</div>
+          <div class="card-body">
+            <canvas id="indexedNonIndexedPublications" class="w-100"></canvas>
+            <p class="chart-description">This chart shows the number of indexed and non-indexed publications.</p>
           </div>
         </div>
     </div>

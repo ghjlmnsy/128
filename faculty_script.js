@@ -19,13 +19,13 @@ function renderCharts(data) {
   renderRatioByRank(data.ratioByRank);
   renderRatioByEduc(data.ratioByEduc);
   renderNumberOfTotalFaculty(data.numberOfTotalFaculty);
-  renderNumberOfPublications(data.numberOfPublications);
+  // renderNumberOfPublications(data.numberOfPublications);
   renderFacultySembyRank(data.facultySembyRank);
   renderFacultyByEducAttainment(data.facultyByEducAttainment);
 }
 
 // Chart variables for handling re-rendering
-var ratioByRankChart, ratioByEducChart, totalFacultyChart, numberOfPublicationsChart, facultySembyRankChart, facultyByEducAttainmentChart;
+var ratioByRankChart, ratioByEducChart, totalFacultyChart, facultySembyRankChart, facultyByEducAttainmentChart;
 
 function renderRatioByRank(chartData) {
   var ctx = document.getElementById("ratioByRank").getContext("2d");
@@ -115,37 +115,37 @@ function renderNumberOfTotalFaculty(chartData) {
   });
 }
 
-function renderNumberOfPublications(chartData) {
-  var labels = chartData.map(
-    (item) => item.SchoolYear + " Semester " + item.semester
-  );
-  var counts = chartData.map((item) => item.totalPublications);
-  var customColors = ["#8E1537", "#FFB81D", "#005740", "#808080"];
-  var ctx = document.getElementById("numberOfPublications").getContext("2d");
-  numberOfPublicationsChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [
-        {
-          label: "Publications",
-          data: counts,
-          backgroundColor: customColors,
-          borderColor: customColors,
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          position: "bottom",
-        },
-      },
-    },
-  });
-}
+// function renderNumberOfPublications(chartData) {
+//   var labels = chartData.map(
+//     (item) => item.SchoolYear + " Semester " + item.semester
+//   );
+//   var counts = chartData.map((item) => item.totalPublications);
+//   var customColors = ["#8E1537", "#FFB81D", "#005740", "#808080"];
+//   var ctx = document.getElementById("numberOfPublications").getContext("2d");
+//   numberOfPublicationsChart = new Chart(ctx, {
+//     type: "line",
+//     data: {
+//       labels: labels,
+//       datasets: [
+//         {
+//           label: "Publications",
+//           data: counts,
+//           backgroundColor: customColors,
+//           borderColor: customColors,
+//           borderWidth: 1,
+//         },
+//       ],
+//     },
+//     options: {
+//       responsive: true,
+//       plugins: {
+//         legend: {
+//           position: "bottom",
+//         },
+//       },
+//     },
+//   });
+// }
 
 function renderFacultySembyRank(chartData) {
   var labelSet = new Set();
@@ -266,6 +266,38 @@ function renderFacultyByEducAttainment(chartData) {
   });
 }
 
+var ctx = document.getElementById('indexedNonIndexedPublications').getContext('2d');
+var indexedNonIndexedPublicationsChart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['Semester 1', 'Semester 2'],
+    datasets: [
+      {
+        label: 'Indexed Publications',
+        data: [10, 15],
+        backgroundColor: '#8E1537',
+        borderWidth: 1
+      },
+      {
+        label: 'Non-Indexed Publications',
+        data: [5, 8],
+        backgroundColor: '#FFB81D',
+        borderWidth: 1
+      }
+    ]
+  },
+  options: {
+    scales: {
+      x: {
+        stacked: true
+      },
+      y: {
+        stacked: true
+      }
+    }
+  }
+});
+
 // Event listener for filter button, used to fetch data based on filter criteria
 $(document).ready(function () {
   $("#filterButton").on("submit", function (e) {
@@ -311,7 +343,7 @@ $(document).ready(function () {
 // Re-render all charts after data filter is applied
 function rerenderCharts(data) {
   if (totalFacultyChart) totalFacultyChart.destroy();
-  if (numberOfPublicationsChart) numberOfPublicationsChart.destroy();
+  // if (numberOfPublicationsChart) numberOfPublicationsChart.destroy();
   if (facultySembyRankChart) facultySembyRankChart.destroy();
   if (facultyByEducAttainmentChart) facultyByEducAttainmentChart.destroy();
   if (ratioByRankChart) ratioByRankChart.destroy();
